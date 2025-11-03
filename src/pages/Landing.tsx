@@ -78,32 +78,60 @@ const Landing = () => {
         </div>
 
         {/* Additional Features */}
-        <div className="bg-card rounded-lg p-8 border animate-fade-in">
-          <h2 className="text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2">
-            <Sparkles className="text-primary" />
-            Funcionalidades Avançadas
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center hover-scale transition-all">
-              <div className="text-4xl mb-3 animate-scale-in">📧</div>
-              <h3 className="font-semibold mb-2">Relatórios por E-mail</h3>
-              <p className="text-sm text-muted-foreground">
-                Receba resumos mensais automáticos no seu e-mail
-              </p>
-            </div>
-            <div className="text-center hover-scale transition-all">
-              <div className="text-4xl mb-3 animate-scale-in" style={{ animationDelay: "0.1s" }}>💱</div>
-              <h3 className="font-semibold mb-2">Conversão de Moedas</h3>
-              <p className="text-sm text-muted-foreground">
-                Registre transações em diferentes moedas com conversão automática
-              </p>
-            </div>
-            <div className="text-center hover-scale transition-all">
-              <div className="text-4xl mb-3 animate-scale-in" style={{ animationDelay: "0.2s" }}>🤖</div>
-              <h3 className="font-semibold mb-2">Análise por IA</h3>
-              <p className="text-sm text-muted-foreground">
-                Obtenha insights inteligentes sobre seus hábitos financeiros
-              </p>
+        <div className="relative overflow-hidden rounded-2xl p-10 border-2 border-primary/20 animate-fade-in bg-gradient-to-br from-primary/5 via-background to-primary/10">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
+          <div className="relative z-10">
+            <h2 className="text-4xl font-bold mb-8 text-center flex items-center justify-center gap-3 animate-scale-in">
+              <Sparkles className="text-primary w-8 h-8 animate-pulse" />
+              <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                Funcionalidades Avançadas
+              </span>
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in">
+                    <span className="text-5xl">📧</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+                    Relatórios por E-mail
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Receba resumos mensais automáticos com análises detalhadas das suas finanças
+                  </p>
+                </div>
+              </div>
+
+              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.1s" }}>
+                    <span className="text-5xl">💱</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+                    Conversão de Moedas
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Registre transações em diferentes moedas com conversão automática e em tempo real
+                  </p>
+                </div>
+              </div>
+
+              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.2s" }}>
+                    <span className="text-5xl">🤖</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+                    Análise por IA
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Obtenha insights inteligentes e recomendações personalizadas sobre seus hábitos
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
