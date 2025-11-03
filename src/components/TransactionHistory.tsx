@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Trash2, TrendingDown, TrendingUp, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,9 +25,10 @@ interface Transaction {
 interface TransactionHistoryProps {
   transactions: Transaction[];
   onUpdate: () => void;
+  onEdit: (transaction: Transaction) => void;
 }
 
-const TransactionHistory = ({ transactions, onUpdate }: TransactionHistoryProps) => {
+const TransactionHistory = ({ transactions, onUpdate, onEdit }: TransactionHistoryProps) => {
   const [filterType, setFilterType] = useState<"all" | "receita" | "despesa">("all");
   const [filterMonth, setFilterMonth] = useState<string>("all");
 
@@ -117,7 +118,7 @@ const TransactionHistory = ({ transactions, onUpdate }: TransactionHistoryProps)
                   <TableHead>Descrição</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="text-right w-[100px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -169,13 +170,24 @@ const TransactionHistory = ({ transactions, onUpdate }: TransactionHistoryProps)
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(transaction.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(transaction)}
+                          className="hover:bg-primary/10"
+                        >
+                          <Pencil className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(transaction.id)}
+                          className="hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

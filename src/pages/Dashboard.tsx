@@ -16,6 +16,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
   useEffect(() => {
     // Check authentication
@@ -164,14 +165,26 @@ const Dashboard = () => {
           <TransactionForm
             onSuccess={() => {
               setShowForm(false);
+              setEditingTransaction(null);
               refetch();
             }}
-            onCancel={() => setShowForm(false)}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingTransaction(null);
+            }}
+            editingTransaction={editingTransaction}
           />
         )}
 
         {/* Transaction History */}
-        <TransactionHistory transactions={transactions} onUpdate={refetch} />
+        <TransactionHistory 
+          transactions={transactions} 
+          onUpdate={refetch}
+          onEdit={(transaction) => {
+            setEditingTransaction(transaction);
+            setShowForm(true);
+          }}
+        />
 
         {/* Advanced Features */}
         <div className="grid md:grid-cols-2 gap-6">

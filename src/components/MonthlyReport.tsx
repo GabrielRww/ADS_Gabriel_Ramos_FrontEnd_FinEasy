@@ -15,6 +15,7 @@ const MonthlyReport = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Você precisa estar logado");
+        setLoading(false);
         return;
       }
 
@@ -24,12 +25,26 @@ const MonthlyReport = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function invocation error:", error);
+        throw error;
+      }
 
-      toast.success(data.message || "Relatório enviado com sucesso para seu e-mail!");
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success(data?.message || "Relatório enviado com sucesso para seu e-mail!");
     } catch (error: any) {
       console.error("Error sending report:", error);
-      toast.error(error.message || "Erro ao enviar relatório");
+      
+      let errorMessage = "Erro ao enviar relatório";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

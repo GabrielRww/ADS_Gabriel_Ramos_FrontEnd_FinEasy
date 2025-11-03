@@ -12,32 +12,53 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Starting send-monthly-report function");
+    
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
+      console.error("No authorization header provided");
       return new Response(JSON.stringify({ error: "No authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase environment variables");
+      throw new Error("Configuração do servidor incompleta");
+    }
+
+    if (!resendApiKey) {
+      console.error("Missing RESEND_API_KEY");
+      throw new Error("API de e-mail não configurada. Configure a chave RESEND_API_KEY.");
+    }
+
+    console.log("Environment variables loaded successfully");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get user from auth header
     const token = authHeader.replace("Bearer ", "");
+    console.log("Authenticating user...");
+    
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      console.error("User authentication failed:", userError);
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log(`User authenticated: ${user.email}`);
+
     // Get user profile
+    console.log("Fetching user profile...");
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -49,6 +70,8 @@ serve(async (req) => {
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
 
+    console.log(`Fetching transactions from ${firstDay} to ${lastDay}...`);
+    
     const { data: transactions, error: transactionsError } = await supabase
       .from("transactions")
       .select("*, categories(*)")
@@ -57,13 +80,19 @@ serve(async (req) => {
       .lte("date", lastDay)
       .order("date", { ascending: false });
 
-    if (transactionsError) throw transactionsError;
+    if (transactionsError) {
+      console.error("Error fetching transactions:", transactionsError);
+      throw transactionsError;
+    }
+
+    console.log(`Found ${transactions?.length || 0} transactions`);
 
     if (!transactions || transactions.length === 0) {
+      console.log("No transactions found for this month");
       return new Response(
-        JSON.stringify({ message: "Nenhuma transação encontrada para este mês" }),
+        JSON.stringify({ error: "Nenhuma transação encontrada para este mês. Adicione algumas transações primeiro." }),
         {
-          status: 200,
+          status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
@@ -179,6 +208,8 @@ serve(async (req) => {
     `;
 
     // Send email using Resend API
+    console.log(`Sending email to ${user.email}...`);
+    
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -186,20 +217,24 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Controle Financeiro <onboarding@resend.dev>",
+        from: "Fineasy <onboarding@resend.dev>",
         to: [user.email!],
         subject: `Relatório Financeiro - ${monthName}`,
         html,
       }),
     });
 
+    const emailData = await emailResponse.json();
+    
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      throw new Error(`Erro ao enviar e-mail: ${JSON.stringify(errorData)}`);
+      console.error("Resend API error:", emailData);
+      throw new Error(`Erro ao enviar e-mail: ${emailData.message || JSON.stringify(emailData)}`);
     }
 
+    console.log("Email sent successfully:", emailData);
+
     return new Response(
-      JSON.stringify({ message: "Relatório enviado com sucesso!" }),
+      JSON.stringify({ message: "Relatório enviado com sucesso para seu e-mail!" }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

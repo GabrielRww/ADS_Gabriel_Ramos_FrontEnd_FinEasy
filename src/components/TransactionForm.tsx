@@ -12,17 +12,26 @@ import { Loader2 } from "lucide-react";
 interface TransactionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  editingTransaction?: {
+    id: string;
+    type: "receita" | "despesa";
+    amount: number;
+    currency: string;
+    description: string;
+    category_id: string;
+    date: string;
+  };
 }
 
-const TransactionForm = ({ onSuccess, onCancel }: TransactionFormProps) => {
+const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: TransactionFormProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type: "despesa" as "receita" | "despesa",
-    amount: "",
-    currency: "BRL",
-    description: "",
-    categoryId: "",
-    date: new Date().toISOString().split("T")[0],
+    type: (editingTransaction?.type || "despesa") as "receita" | "despesa",
+    amount: editingTransaction?.amount?.toString() || "",
+    currency: editingTransaction?.currency || "BRL",
+    description: editingTransaction?.description || "",
+    categoryId: editingTransaction?.category_id || "",
+    date: editingTransaction?.date || new Date().toISOString().split("T")[0],
   });
 
   const { data: categories = [] } = useQuery({
@@ -59,20 +68,40 @@ const TransactionForm = ({ onSuccess, onCancel }: TransactionFormProps) => {
         }
       }
 
-      const { error } = await supabase.from("transactions").insert({
-        user_id: user.id,
-        type: formData.type,
-        amount: Number(formData.amount),
-        currency: formData.currency,
-        amount_brl: amountBrl,
-        description: formData.description,
-        category_id: formData.categoryId || null,
-        date: formData.date,
-      });
+      if (editingTransaction) {
+        // Update existing transaction
+        const { error } = await supabase
+          .from("transactions")
+          .update({
+            type: formData.type,
+            amount: Number(formData.amount),
+            currency: formData.currency,
+            amount_brl: amountBrl,
+            description: formData.description,
+            category_id: formData.categoryId || null,
+            date: formData.date,
+          })
+          .eq("id", editingTransaction.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Transação atualizada com sucesso!");
+      } else {
+        // Insert new transaction
+        const { error } = await supabase.from("transactions").insert({
+          user_id: user.id,
+          type: formData.type,
+          amount: Number(formData.amount),
+          currency: formData.currency,
+          amount_brl: amountBrl,
+          description: formData.description,
+          category_id: formData.categoryId || null,
+          date: formData.date,
+        });
 
-      toast.success("Transação adicionada com sucesso!");
+        if (error) throw error;
+        toast.success("Transação adicionada com sucesso!");
+      }
+
       onSuccess();
     } catch (error: any) {
       toast.error(error.message || "Erro ao adicionar transação");
@@ -84,7 +113,7 @@ const TransactionForm = ({ onSuccess, onCancel }: TransactionFormProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nova Transação</CardTitle>
+        <CardTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -203,6 +232,8 @@ const TransactionForm = ({ onSuccess, onCancel }: TransactionFormProps) => {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Salvando...
                 </>
+              ) : editingTransaction ? (
+                "Atualizar"
               ) : (
                 "Salvar"
               )}
