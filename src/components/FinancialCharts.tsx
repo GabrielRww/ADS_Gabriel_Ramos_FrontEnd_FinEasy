@@ -1,0 +1,290 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useState, useMemo } from "react";
+import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+interface Transaction {
+  id: string;
+  date: string;
+  type: string;
+  amount: number;
+  amount_brl: number | null;
+  description: string;
+  categories?: {
+    name: string;
+    color: string;
+  };
+}
+
+interface FinancialChartsProps {
+  transactions: Transaction[];
+}
+
+const COLORS = ['#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#14b8a6', '#f97316'];
+
+const FinancialCharts = ({ transactions }: FinancialChartsProps) => {
+  const [selectedPeriod, setSelectedPeriod] = useState("6");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Calcular dados mensais
+  const monthlyData = useMemo(() => {
+    const months = parseInt(selectedPeriod);
+    const now = new Date();
+    const monthsData: { [key: string]: { receitas: number; despesas: number; saldo: number } } = {};
+
+    // Inicializar últimos N meses
+    for (let i = months - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      monthsData[key] = { receitas: 0, despesas: 0, saldo: 0 };
+    }
+
+    // Filtrar transações
+    const filteredTransactions = transactions.filter(t => {
+      if (selectedCategory !== "all" && t.categories?.name !== selectedCategory) return false;
+      const transactionDate = new Date(t.date);
+      const monthsAgo = new Date(now.getFullYear(), now.getMonth() - months, 1);
+      return transactionDate >= monthsAgo;
+    });
+
+    // Agregar dados
+    filteredTransactions.forEach(t => {
+      const date = new Date(t.date);
+      const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      if (monthsData[key]) {
+        const amount = Number(t.amount_brl || t.amount);
+        if (t.type === 'receita') {
+          monthsData[key].receitas += amount;
+        } else {
+          monthsData[key].despesas += amount;
+        }
+        monthsData[key].saldo = monthsData[key].receitas - monthsData[key].despesas;
+      }
+    });
+
+    return Object.entries(monthsData).map(([mes, data]) => ({
+      mes,
+      receitas: Number(data.receitas.toFixed(2)),
+      despesas: Number(data.despesas.toFixed(2)),
+      saldo: Number(data.saldo.toFixed(2))
+    }));
+  }, [transactions, selectedPeriod, selectedCategory]);
+
+  // Dados por categoria
+  const categoryData = useMemo(() => {
+    const categories: { [key: string]: number } = {};
+    
+    const filteredTransactions = transactions.filter(t => t.type === 'despesa');
+    
+    filteredTransactions.forEach(t => {
+      const categoryName = t.categories?.name || 'Outros';
+      const amount = Number(t.amount_brl || t.amount);
+      categories[categoryName] = (categories[categoryName] || 0) + amount;
+    });
+
+    return Object.entries(categories)
+      .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+  }, [transactions]);
+
+  // Análise de tendências
+  const trend = useMemo(() => {
+    if (monthlyData.length < 2) return { direction: 'stable', percentage: 0, message: 'Dados insuficientes' };
+
+    const lastMonth = monthlyData[monthlyData.length - 1];
+    const previousMonth = monthlyData[monthlyData.length - 2];
+
+    const lastSaldo = lastMonth.saldo;
+    const previousSaldo = previousMonth.saldo;
+
+    if (previousSaldo === 0) return { direction: 'stable', percentage: 0, message: 'Sem histórico anterior' };
+
+    const percentage = ((lastSaldo - previousSaldo) / Math.abs(previousSaldo)) * 100;
+
+    if (percentage > 5) {
+      return { 
+        direction: 'up', 
+        percentage: Math.abs(percentage).toFixed(1), 
+        message: 'Você está economizando mais!' 
+      };
+    } else if (percentage < -5) {
+      return { 
+        direction: 'down', 
+        percentage: Math.abs(percentage).toFixed(1), 
+        message: 'Gastos aumentaram no último mês' 
+      };
+    } else {
+      return { 
+        direction: 'stable', 
+        percentage: Math.abs(percentage).toFixed(1), 
+        message: 'Finanças estáveis' 
+      };
+    }
+  }, [monthlyData]);
+
+  // Obter categorias únicas
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(transactions.map(t => t.categories?.name).filter(Boolean));
+    return Array.from(uniqueCategories);
+  }, [transactions]);
+
+  return (
+    <div className="space-y-6">
+      {/* Filtros */}
+      <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Filtros de Análise
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-2 block">Período</label>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">Últimos 3 meses</SelectItem>
+                <SelectItem value="6">Últimos 6 meses</SelectItem>
+                <SelectItem value="12">Último ano</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-2 block">Categoria</label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat || ''}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Análise de Tendências */}
+      <Card className={`border-2 transition-all ${
+        trend.direction === 'up' ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20' :
+        trend.direction === 'down' ? 'border-red-500/50 bg-red-50/50 dark:bg-red-950/20' :
+        'border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20'
+      }`}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              {trend.direction === 'up' && <TrendingUp className="h-5 w-5 text-green-600" />}
+              {trend.direction === 'down' && <TrendingDown className="h-5 w-5 text-red-600" />}
+              {trend.direction === 'stable' && <Activity className="h-5 w-5 text-blue-600" />}
+              Análise de Tendências
+            </span>
+            <Badge variant={trend.direction === 'up' ? 'default' : trend.direction === 'down' ? 'destructive' : 'secondary'}>
+              {trend.percentage}%
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg font-medium">{trend.message}</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Comparando os últimos dois meses do período selecionado
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico de Evolução Mensal */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução Mensal - Receitas vs Despesas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="mes" className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+              />
+              <Legend />
+              <Bar dataKey="receitas" fill="#10b981" name="Receitas" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="despesas" fill="#ef4444" name="Despesas" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico de Saldo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução do Saldo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="mes" className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="saldo" 
+                stroke="#8b5cf6" 
+                strokeWidth={3}
+                name="Saldo"
+                dot={{ fill: '#8b5cf6', r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico de Pizza - Despesas por Categoria */}
+      {categoryData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Despesas por Categoria</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default FinancialCharts;

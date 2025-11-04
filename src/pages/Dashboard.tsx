@@ -11,8 +11,11 @@ import TransactionForm from "@/components/TransactionForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import AIAnalysis from "@/components/AIAnalysis";
 import MonthlyReport from "@/components/MonthlyReport";
+import FinancialCharts from "@/components/FinancialCharts";
 import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, History, Brain, Mail } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -94,9 +97,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-4 shadow-md">
+      <div className="bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground p-4 shadow-lg border-b border-primary-foreground/10">
         <div className="container mx-auto flex justify-between items-center">
           <div>
             <div className="flex items-center gap-3">
@@ -125,45 +128,60 @@ const Dashboard = () => {
       <div className="container mx-auto p-4 space-y-6">
         {/* Summary Cards */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Saldo Atual
               </CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className={`text-3xl font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 R$ {saldo.toFixed(2)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {saldo >= 0 ? 'Situação positiva' : 'Atenção ao saldo'}
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-green-500/20 hover:border-green-500/40 transition-all hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Receitas
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-green-600">
                 R$ {receitas.toFixed(2)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de entradas
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-red-500/20 hover:border-red-500/40 transition-all hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Despesas
               </CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <TrendingDown className="h-5 w-5 text-red-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-3xl font-bold text-red-600">
                 R$ {despesas.toFixed(2)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de saídas
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -192,21 +210,54 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Transaction History */}
-        <TransactionHistory 
-          transactions={transactions} 
-          onUpdate={refetch}
-          onEdit={(transaction) => {
-            setEditingTransaction(transaction);
-            setShowForm(true);
-          }}
-        />
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="transactions" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+            <TabsTrigger value="transactions" className="flex items-center gap-2 py-3">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Transações</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2 py-3">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="flex items-center gap-2 py-3">
+              <Brain className="h-4 w-4" />
+              <span className="hidden sm:inline">Análise IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-2 py-3">
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Relatório Email</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Advanced Features */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <AIAnalysis />
-          <MonthlyReport />
-        </div>
+          {/* Transaction History Tab */}
+          <TabsContent value="transactions" className="space-y-6">
+            <TransactionHistory 
+              transactions={transactions} 
+              onUpdate={refetch}
+              onEdit={(transaction) => {
+                setEditingTransaction(transaction);
+                setShowForm(true);
+              }}
+            />
+          </TabsContent>
+
+          {/* Reports and Charts Tab */}
+          <TabsContent value="reports" className="space-y-6">
+            <FinancialCharts transactions={transactions} />
+          </TabsContent>
+
+          {/* AI Analysis Tab */}
+          <TabsContent value="ai" className="space-y-6">
+            <AIAnalysis />
+          </TabsContent>
+
+          {/* Monthly Report Tab */}
+          <TabsContent value="email" className="space-y-6">
+            <MonthlyReport />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
