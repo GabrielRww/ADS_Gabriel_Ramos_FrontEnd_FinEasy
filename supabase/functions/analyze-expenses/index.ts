@@ -22,7 +22,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const googleApiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY")!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -85,23 +85,10 @@ serve(async (req) => {
       numeroDeTransacoes: transactions.length,
     };
 
-    // Call Lovable AI for analysis
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Você é um assistente financeiro inteligente. Analise os dados financeiros do usuário e forneça insights úteis e acionáveis sobre seus hábitos de gastos. Seja direto e objetivo, destacando os pontos mais importantes.",
-          },
-          {
-            role: "user",
-            content: `Analise meus dados financeiros e me dê insights:
+    // Call Google Gemini AI for analysis
+    const prompt = `Você é um assistente financeiro inteligente. Analise os dados financeiros do usuário e forneça insights úteis e acionáveis sobre seus hábitos de gastos. Seja direto e objetivo, destacando os pontos mais importantes.
+
+Analise meus dados financeiros e me dê insights:
 
 Receitas totais: R$ ${dataForAI.totalReceitas.toFixed(2)}
 Despesas totais: R$ ${dataForAI.totalDespesas.toFixed(2)}
@@ -117,36 +104,30 @@ Forneça uma análise detalhada destacando:
 1. Onde estou gastando mais dinheiro (percentuais)
 2. Se há categorias com gastos excessivos
 3. Sugestões de economia
-4. Pontos positivos e negativos do meu comportamento financeiro`,
-          },
-        ],
+4. Pontos positivos e negativos do meu comportamento financeiro`;
+
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleApiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
       }),
     });
 
     if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente mais tarde." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao seu workspace Lovable." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+      const errorText = await aiResponse.text();
+      console.error("Google Gemini API error:", aiResponse.status, errorText);
+      throw new Error(`Google Gemini API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const analysis = aiData.choices[0].message.content;
+    const analysis = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível gerar análise.";
 
     return new Response(
       JSON.stringify({ analysis }),

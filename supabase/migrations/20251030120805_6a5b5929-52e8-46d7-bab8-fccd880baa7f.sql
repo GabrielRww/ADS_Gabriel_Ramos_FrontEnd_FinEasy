@@ -192,3 +192,24 @@ $$;
 CREATE TRIGGER create_default_categories_trigger
   AFTER INSERT ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.create_default_categories();
+  -- Update the handle_new_user function to assign default role
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', new.email)
+  );
+  
+  -- Assign default 'user' role to new users
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (new.id, 'user');
+  
+  RETURN new;
+END;
+$$;

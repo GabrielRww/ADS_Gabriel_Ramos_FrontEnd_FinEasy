@@ -4,19 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Plus, TrendingDown, TrendingUp, Wallet, Shield, User as UserIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import AIAnalysis from "@/components/AIAnalysis";
 import MonthlyReport from "@/components/MonthlyReport";
 import { useQuery } from "@tanstack/react-query";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const { data: userRole } = useUserRole();
 
   useEffect(() => {
     // Check authentication
@@ -96,7 +99,20 @@ const Dashboard = () => {
       <div className="bg-primary text-primary-foreground p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Controle Financeiro</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">Controle Financeiro</h1>
+              {userRole && (
+                <Badge 
+                  variant={userRole === 'admin' ? 'default' : userRole === 'user' ? 'secondary' : 'outline'}
+                  className="flex items-center gap-1"
+                >
+                  {userRole === 'admin' && <Shield className="h-3 w-3" />}
+                  {userRole === 'user' && <UserIcon className="h-3 w-3" />}
+                  {userRole === 'guest' && <Eye className="h-3 w-3" />}
+                  {userRole === 'admin' ? 'Admin' : userRole === 'user' ? 'Usuário' : 'Convidado'}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm opacity-90">Olá, {profile?.full_name || user.email}</p>
           </div>
           <Button variant="secondary" onClick={handleLogout}>
