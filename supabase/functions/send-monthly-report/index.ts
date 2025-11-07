@@ -1,10 +1,173 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
+import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Helper function to generate PDF
+async function generatePDF(
+  monthName: string,
+  receitas: number,
+  despesas: number,
+  saldo: number,
+  categoryStats: Record<string, number>,
+  transactions: any[]
+): Promise<string> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595, 842]); // A4 size
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  
+  let yPosition = 800;
+  const leftMargin = 50;
+  
+  // Title
+  page.drawText('Relatório Financeiro', {
+    x: leftMargin,
+    y: yPosition,
+    size: 24,
+    font: boldFont,
+    color: rgb(0.39, 0.4, 0.95),
+  });
+  
+  yPosition -= 30;
+  page.drawText(monthName, {
+    x: leftMargin,
+    y: yPosition,
+    size: 16,
+    font: font,
+  });
+  
+  yPosition -= 50;
+  
+  // Summary
+  page.drawText('Resumo do Mês', {
+    x: leftMargin,
+    y: yPosition,
+    size: 14,
+    font: boldFont,
+  });
+  
+  yPosition -= 25;
+  page.drawText(`Receitas: R$ ${receitas.toFixed(2)}`, {
+    x: leftMargin,
+    y: yPosition,
+    size: 12,
+    font: font,
+    color: rgb(0.06, 0.73, 0.51),
+  });
+  
+  yPosition -= 20;
+  page.drawText(`Despesas: R$ ${despesas.toFixed(2)}`, {
+    x: leftMargin,
+    y: yPosition,
+    size: 12,
+    font: font,
+    color: rgb(0.94, 0.27, 0.27),
+  });
+  
+  yPosition -= 20;
+  page.drawText(`Saldo: R$ ${saldo.toFixed(2)}`, {
+    x: leftMargin,
+    y: yPosition,
+    size: 12,
+    font: boldFont,
+    color: saldo >= 0 ? rgb(0.06, 0.73, 0.51) : rgb(0.94, 0.27, 0.27),
+  });
+  
+  yPosition -= 40;
+  
+  // Category breakdown
+  page.drawText('Gastos por Categoria', {
+    x: leftMargin,
+    y: yPosition,
+    size: 14,
+    font: boldFont,
+  });
+  
+  yPosition -= 25;
+  const sortedCategories = Object.entries(categoryStats).sort((a, b) => b[1] - a[1]);
+  
+  for (const [category, amount] of sortedCategories) {
+    const percentage = ((amount / despesas) * 100).toFixed(1);
+    page.drawText(`${category}: R$ ${amount.toFixed(2)} (${percentage}%)`, {
+      x: leftMargin,
+      y: yPosition,
+      size: 10,
+      font: font,
+    });
+    yPosition -= 18;
+  }
+  
+  yPosition -= 20;
+  page.drawText(`Total de transações: ${transactions.length}`, {
+    x: leftMargin,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.42, 0.45, 0.5),
+  });
+  
+  const pdfBytes = await pdfDoc.save();
+  const base64 = btoa(String.fromCharCode(...pdfBytes));
+  return base64;
+}
+
+// Helper function to generate Excel
+function generateExcel(
+  monthName: string,
+  receitas: number,
+  despesas: number,
+  saldo: number,
+  categoryStats: Record<string, number>,
+  transactions: any[]
+): string {
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+
+  // Summary sheet
+  const summaryData = [
+    ['Relatório Financeiro', monthName],
+    [],
+    ['Tipo', 'Valor'],
+    ['Receitas', receitas.toFixed(2)],
+    ['Despesas', despesas.toFixed(2)],
+    ['Saldo', saldo.toFixed(2)],
+    [],
+    ['Categoria', 'Valor', 'Percentual'],
+    ...Object.entries(categoryStats)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, val]) => [cat, val.toFixed(2), `${((val / despesas) * 100).toFixed(1)}%`]),
+    [],
+    ['Total de transações:', transactions.length],
+  ];
+  
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo');
+
+  // Transactions sheet
+  const transactionsData = [
+    ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'],
+    ...transactions.map(t => [
+      new Date(t.date).toLocaleDateString('pt-BR'),
+      t.description,
+      t.categories?.name || 'Sem categoria',
+      t.type === 'receita' ? 'Receita' : 'Despesa',
+      Number(t.amount_brl || t.amount).toFixed(2),
+    ]),
+  ];
+  
+  const wsTransactions = XLSX.utils.aoa_to_sheet(transactionsData);
+  XLSX.utils.book_append_sheet(wb, wsTransactions, 'Transações');
+
+  // Generate Excel file as base64
+  const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  return btoa(String.fromCharCode(...new Uint8Array(excelBuffer)));
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,6 +185,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const { format = "pdf" } = await req.json();
+    console.log(`Report format requested: ${format}`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -207,8 +373,38 @@ serve(async (req) => {
       </html>
     `;
 
+    // Generate attachment based on format
+    let attachment = null;
+    
+    if (format === "pdf") {
+      console.log("Generating PDF...");
+      const pdfContent = await generatePDF(monthName, receitas, despesas, saldo, categoryStats, transactions);
+      attachment = {
+        filename: `relatorio-${monthName.replace(/\s/g, '-')}.pdf`,
+        content: pdfContent,
+      };
+    } else if (format === "excel") {
+      console.log("Generating Excel...");
+      const excelContent = await generateExcel(monthName, receitas, despesas, saldo, categoryStats, transactions);
+      attachment = {
+        filename: `relatorio-${monthName.replace(/\s/g, '-')}.xlsx`,
+        content: excelContent,
+      };
+    }
+
     // Send email using Resend API
     console.log(`Sending email to ${user.email}...`);
+    
+    const emailBody: any = {
+      from: "Fineasy <onboarding@resend.dev>",
+      to: [user.email!],
+      subject: `Relatório Financeiro ${format.toUpperCase()} - ${monthName}`,
+      html,
+    };
+
+    if (attachment) {
+      emailBody.attachments = [attachment];
+    }
     
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -216,12 +412,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "Fineasy <onboarding@resend.dev>",
-        to: [user.email!],
-        subject: `Relatório Financeiro - ${monthName}`,
-        html,
-      }),
+      body: JSON.stringify(emailBody),
     });
 
     const emailData = await emailResponse.json();

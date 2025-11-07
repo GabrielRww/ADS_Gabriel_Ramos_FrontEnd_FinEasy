@@ -9,7 +9,7 @@ import { LogOut, Plus, TrendingDown, TrendingUp, Wallet, Shield, User as UserIco
 import { toast } from "sonner";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionHistory from "@/components/TransactionHistory";
-import AIAnalysis from "@/components/AIAnalysis";
+import AIChat from "@/components/AIChat";
 import MonthlyReport from "@/components/MonthlyReport";
 import FinancialCharts from "@/components/FinancialCharts";
 import { useQuery } from "@tanstack/react-query";
@@ -250,7 +250,7 @@ const Dashboard = () => {
 
           {/* AI Analysis Tab */}
           <TabsContent value="ai" className="space-y-6">
-            <AIAnalysis />
+            <AIChat />
           </TabsContent>
 
           {/* Monthly Report Tab */}

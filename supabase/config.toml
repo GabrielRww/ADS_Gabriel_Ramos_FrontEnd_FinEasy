@@ -3,5 +3,8 @@ project_id = "fitycdhysdzafkuyxbbw"
 [functions.analyze-expenses]
 verify_jwt = true
 
+[functions.ai-chat]
+verify_jwt = true
+
 [functions.send-monthly-report]
 verify_jwt = true

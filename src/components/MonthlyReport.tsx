@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail, Loader2, FileText, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const MonthlyReport = () => {
   const [loading, setLoading] = useState(false);
+  const [format, setFormat] = useState<"pdf" | "excel">("pdf");
 
   const handleSendReport = async () => {
     setLoading(true);
@@ -20,6 +28,7 @@ const MonthlyReport = () => {
       }
 
       const { data, error } = await supabase.functions.invoke("send-monthly-report", {
+        body: { format },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -60,8 +69,31 @@ const MonthlyReport = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Receba um resumo completo das suas finanças do mês atual no seu e-mail.
+          Receba um resumo completo das suas finanças do mês atual no seu e-mail em PDF ou Excel.
         </p>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Formato do Relatório</label>
+          <Select value={format} onValueChange={(value: "pdf" | "excel") => setFormat(value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pdf">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  PDF
+                </div>
+              </SelectItem>
+              <SelectItem value="excel">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Excel
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
         <Button onClick={handleSendReport} disabled={loading} className="w-full">
           {loading ? (
@@ -72,7 +104,7 @@ const MonthlyReport = () => {
           ) : (
             <>
               <Mail className="mr-2 h-4 w-4" />
-              Enviar Relatório
+              Enviar Relatório {format.toUpperCase()}
             </>
           )}
         </Button>
