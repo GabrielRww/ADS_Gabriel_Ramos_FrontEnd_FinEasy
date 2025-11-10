@@ -191,16 +191,16 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
 
     if (!supabaseUrl || !supabaseKey) {
       console.error("Missing Supabase environment variables");
       throw new Error("Configuração do servidor incompleta");
     }
 
-    if (!resendApiKey) {
-      console.error("Missing RESEND_API_KEY");
-      throw new Error("API de e-mail não configurada. Configure a chave RESEND_API_KEY.");
+    if (!brevoApiKey) {
+      console.error("Missing BREVO_API_KEY");
+      throw new Error("API de e-mail não configurada. Configure a chave BREVO_API_KEY.");
     }
 
     console.log("Environment variables loaded successfully");
@@ -392,24 +392,28 @@ serve(async (req) => {
       };
     }
 
-    // Send email using Resend API
+    // Send email using Brevo API
     console.log(`Sending email to ${user.email}...`);
     
+    // Use a verified sender email - users should add their own verified email in Brevo
     const emailBody: any = {
-      from: "Fineasy <onboarding@resend.dev>",
-      to: [user.email!],
-      subject: `Relatório Financeiro ${format.toUpperCase()} - ${monthName}`,
-      html,
+      sender: { name: "Fineasy Relatórios", email: "noreply@brevo.com" },
+      to: [{ email: user.email!, name: profile?.full_name || user.email }],
+      subject: `📊 Relatório Financeiro ${format.toUpperCase()} - ${monthName}`,
+      htmlContent: html,
     };
 
     if (attachment) {
-      emailBody.attachments = [attachment];
+      emailBody.attachment = [{
+        name: attachment.filename,
+        content: attachment.content,
+      }];
     }
     
-    const emailResponse = await fetch("https://api.resend.com/emails", {
+    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${resendApiKey}`,
+        "api-key": brevoApiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(emailBody),
@@ -418,7 +422,7 @@ serve(async (req) => {
     const emailData = await emailResponse.json();
     
     if (!emailResponse.ok) {
-      console.error("Resend API error:", emailData);
+      console.error("Brevo API error:", emailData);
       throw new Error(`Erro ao enviar e-mail: ${emailData.message || JSON.stringify(emailData)}`);
     }
 
