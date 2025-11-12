@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, TrendingUp, PieChart, Calendar, DollarSign, Sparkles } from "lucide-react";
+import { ArrowRight, TrendingUp, PieChart, Calendar, DollarSign, Sparkles, Mail, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import fineasyLogo from "@/assets/fineasy-logo.png";
 
@@ -92,7 +92,7 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in">
-                    <span className="text-5xl">📧</span>
+                    <Mail className="text-blue-600 w-10 h-10" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
                     Relatórios por E-mail
@@ -107,7 +107,7 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.1s" }}>
-                    <span className="text-5xl">💱</span>
+                    <DollarSign className="text-green-600 w-10 h-10" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
                     Conversão de Moedas
@@ -122,7 +122,7 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.2s" }}>
-                    <span className="text-5xl">🤖</span>
+                    <Brain className="text-purple-600 w-10 h-10" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
                     Análise por IA
