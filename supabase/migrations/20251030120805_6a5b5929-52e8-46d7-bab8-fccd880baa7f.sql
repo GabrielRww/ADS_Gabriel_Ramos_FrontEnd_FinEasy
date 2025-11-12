@@ -213,3 +213,79 @@ BEGIN
   RETURN new;
 END;
 $$;
+
+-- Create user_access_logs table for access history
+CREATE TABLE public.user_access_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  action text NOT NULL,
+  ip_address text,
+  user_agent text,
+  created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.user_access_logs ENABLE ROW LEVEL SECURITY;
+
+-- Policies for user_access_logs
+CREATE POLICY "Admins can view all access logs"
+  ON public.user_access_logs
+  FOR SELECT
+  USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Users can view their own access logs"
+  ON public.user_access_logs
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "System can insert access logs"
+  ON public.user_access_logs
+  FOR INSERT
+  WITH CHECK (true);
+
+-- Create user_preferences table
+CREATE TABLE public.user_preferences (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  theme text DEFAULT 'light',
+  language text DEFAULT 'pt-BR',
+  currency_display text DEFAULT 'BRL',
+  date_format text DEFAULT 'DD/MM/YYYY',
+  notifications_enabled boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+-- Enable RLS
+ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
+
+-- Policies for user_preferences
+CREATE POLICY "Users can view their own preferences"
+  ON public.user_preferences
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own preferences"
+  ON public.user_preferences
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own preferences"
+  ON public.user_preferences
+  FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all preferences"
+  ON public.user_preferences
+  FOR SELECT
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Create trigger for updated_at
+CREATE TRIGGER update_user_preferences_updated_at
+  BEFORE UPDATE ON public.user_preferences
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Create index for better performance
+CREATE INDEX idx_user_access_logs_user_id ON public.user_access_logs(user_id);
+CREATE INDEX idx_user_access_logs_created_at ON public.user_access_logs(created_at DESC);
+CREATE INDEX idx_user_preferences_user_id ON public.user_preferences(user_id);
