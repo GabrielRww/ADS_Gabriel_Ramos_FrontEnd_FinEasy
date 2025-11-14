@@ -85,6 +85,20 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ["credit-cards"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("credit_cards")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -112,9 +126,14 @@ const Dashboard = () => {
     .filter((t) => t.type === "receita")
     .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-  const despesas = transactions
+  // Incluir gastos dos cartões de crédito nas despesas
+  const despesasTransacoes = transactions
     .filter((t) => t.type === "despesa")
     .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
+  
+  const despesasCartoes = creditCards.reduce((sum, card) => sum + Number(card.used_limit), 0);
+  
+  const despesas = despesasTransacoes + despesasCartoes;
 
   const saldo = receitas - despesas;
 
@@ -278,7 +297,7 @@ const Dashboard = () => {
 
           {/* Reports and Charts Tab */}
           <TabsContent value="reports" className="space-y-6">
-            <FinancialCharts transactions={transactions} />
+            <FinancialCharts transactions={transactions} creditCards={creditCards} />
           </TabsContent>
 
           {/* Credit Cards Tab */}
@@ -288,7 +307,7 @@ const Dashboard = () => {
 
           {/* Financial Goals Tab */}
           <TabsContent value="goals" className="space-y-6">
-            <FinancialGoals />
+            <FinancialGoals transactions={transactions} creditCards={creditCards} />
           </TabsContent>
 
           {/* AI Analysis Tab */}

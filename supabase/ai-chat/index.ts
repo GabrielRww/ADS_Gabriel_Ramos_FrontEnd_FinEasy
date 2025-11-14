@@ -57,6 +57,33 @@ serve(async (req) => {
 
     if (transactionsError) throw transactionsError;
 
+    // Get user's credit cards
+    const { data: creditCards, error: cardsError } = await supabase
+      .from("credit_cards")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (cardsError) throw cardsError;
+
+    // Get user's financial goals
+    const { data: financialGoals, error: goalsError } = await supabase
+      .from("financial_goals")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (goalsError) throw goalsError;
+
+    // Get user's categories
+    const { data: categories, error: categoriesError } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("name");
+
+    if (categoriesError) throw categoriesError;
+
     // Get messages from request
     const { messages } = await req.json();
 
@@ -77,8 +104,46 @@ serve(async (req) => {
         categoryStats[categoryName] = (categoryStats[categoryName] || 0) + Number(t.amount_brl || t.amount);
       });
 
+    // Credit cards statistics
+    const totalCreditLimit = creditCards?.reduce((sum, card) => sum + Number(card.credit_limit), 0) || 0;
+    const totalUsedLimit = creditCards?.reduce((sum, card) => sum + Number(card.used_limit), 0) || 0;
+    const totalAvailableLimit = totalCreditLimit - totalUsedLimit;
+    const creditUsagePercentage = totalCreditLimit > 0 ? (totalUsedLimit / totalCreditLimit) * 100 : 0;
+
+    const cardsContext = creditCards?.length ? `
+Cartões de Crédito (${creditCards.length} cartões):
+${creditCards.map((card) => {
+  const available = Number(card.credit_limit) - Number(card.used_limit);
+  const usage = (Number(card.used_limit) / Number(card.credit_limit)) * 100;
+  return `- ${card.card_name} (${card.card_brand}): Limite R$ ${Number(card.credit_limit).toFixed(2)} | Usado R$ ${Number(card.used_limit).toFixed(2)} | Disponível R$ ${available.toFixed(2)} | Uso: ${usage.toFixed(1)}% | Fechamento: dia ${card.closing_day} | Vencimento: dia ${card.due_day}`;
+}).join("\n")}
+- Total de limite: R$ ${totalCreditLimit.toFixed(2)}
+- Total utilizado: R$ ${totalUsedLimit.toFixed(2)}
+- Total disponível: R$ ${totalAvailableLimit.toFixed(2)}
+- Uso geral dos cartões: ${creditUsagePercentage.toFixed(1)}%
+` : "Nenhum cartão de crédito cadastrado.";
+
+    // Financial goals statistics
+    const goalsContext = financialGoals?.length ? `
+Metas Financeiras (${financialGoals.length} metas):
+${financialGoals.map((goal) => {
+  const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
+  const remaining = Number(goal.target_amount) - Number(goal.current_amount);
+  const status = goal.completed ? "✓ Concluída" : "Em progresso";
+  return `- ${goal.goal_name} (${goal.goal_type}): ${status} | Meta R$ ${Number(goal.target_amount).toFixed(2)} | Atual R$ ${Number(goal.current_amount).toFixed(2)} | Faltam R$ ${remaining.toFixed(2)} | Progresso: ${progress.toFixed(1)}%${goal.target_date ? ` | Data alvo: ${goal.target_date}` : ''}${goal.monthly_contribution ? ` | Contribuição mensal: R$ ${Number(goal.monthly_contribution).toFixed(2)}` : ''}`;
+}).join("\n")}
+` : "Nenhuma meta financeira cadastrada.";
+
+    // Categories context
+    const categoriesContext = categories?.length ? `
+Categorias (${categories.length} categorias):
+${categories.map((cat) => `- ${cat.icon} ${cat.name}`).join(", ")}
+` : "Nenhuma categoria cadastrada.";
+
     const financialContext = `
-Contexto Financeiro do Usuário:
+Contexto Financeiro Completo do Usuário:
+
+TRANSAÇÕES:
 - Receitas totais: R$ ${receitas.toFixed(2)}
 - Despesas totais: R$ ${despesas.toFixed(2)}
 - Saldo: R$ ${(receitas - despesas).toFixed(2)}
@@ -88,20 +153,37 @@ Gastos por categoria:
 ${Object.entries(categoryStats)
   .map(([cat, val]) => `- ${cat}: R$ ${val.toFixed(2)} (${((val / despesas) * 100).toFixed(1)}%)`)
   .join("\n")}
+
+${cardsContext}
+
+${goalsContext}
+
+${categoriesContext}
 `;
 
-    const systemPrompt = `Você é um assistente financeiro inteligente e amigável. Use o contexto financeiro fornecido para responder às perguntas do usuário de forma clara e objetiva.
+    const systemPrompt = `Você é um assistente financeiro inteligente e amigável chamado FineasyAI. Você tem acesso completo aos dados financeiros do usuário e pode ajudá-lo com análises detalhadas.
 
 ${financialContext}
 
+Suas Capacidades:
+- Analisar transações, receitas e despesas
+- Avaliar o uso de cartões de crédito e dar recomendações
+- Acompanhar o progresso de metas financeiras
+- Sugerir otimizações de gastos por categoria
+- Alertar sobre possíveis problemas financeiros (ex: uso alto do crédito, metas atrasadas)
+- Fornecer insights e dicas personalizadas
+
 Diretrizes:
-- Seja direto e útil nas suas respostas
+- Seja direto, útil e proativo nas suas respostas
 - Use formatação markdown para deixar as respostas mais legíveis
 - Destaque informações importantes com **negrito**
-- Use listas quando apropriado
-- Forneça dicas práticas e acionáveis
-- Seja empático e motivador
-- Se não houver dados suficientes, diga isso de forma construtiva`;
+- Use listas e tabelas quando apropriado
+- Forneça dicas práticas e acionáveis baseadas nos dados reais do usuário
+- Seja empático e motivador, especialmente quando há desafios financeiros
+- Se não houver dados suficientes, diga isso de forma construtiva
+- Quando analisar cartões, sempre mencione o score e o uso percentual
+- Para metas, sempre mostre o progresso e quanto falta para alcançar
+- Seja específico com números e datas dos dados reais do usuário`;
 
     console.log("Sending request to Lovable AI Gateway...");
 

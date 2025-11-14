@@ -18,13 +18,25 @@ interface Transaction {
   };
 }
 
+interface CreditCard {
+  id: string;
+  card_name: string;
+  card_brand: string;
+  credit_limit: number;
+  used_limit: number;
+  closing_day: number;
+  due_day: number;
+  created_at: string;
+}
+
 interface FinancialChartsProps {
   transactions: Transaction[];
+  creditCards: CreditCard[];
 }
 
 const COLORS = ['#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#14b8a6', '#f97316'];
 
-const FinancialCharts = ({ transactions }: FinancialChartsProps) => {
+const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState("6");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -49,7 +61,7 @@ const FinancialCharts = ({ transactions }: FinancialChartsProps) => {
       return transactionDate >= monthsAgo;
     });
 
-    // Agregar dados
+    // Agregar dados das transações
     filteredTransactions.forEach(t => {
       const date = new Date(t.date);
       const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
@@ -60,8 +72,21 @@ const FinancialCharts = ({ transactions }: FinancialChartsProps) => {
         } else {
           monthsData[key].despesas += amount;
         }
-        monthsData[key].saldo = monthsData[key].receitas - monthsData[key].despesas;
       }
+    });
+
+    // Adicionar gastos dos cartões de crédito como despesas
+    // Distribuir o used_limit dos cartões no mês atual
+    const currentMonth = now.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+    if (monthsData[currentMonth]) {
+      creditCards.forEach(card => {
+        monthsData[currentMonth].despesas += Number(card.used_limit);
+      });
+    }
+
+    // Recalcular saldo após adicionar cartões
+    Object.keys(monthsData).forEach(key => {
+      monthsData[key].saldo = monthsData[key].receitas - monthsData[key].despesas;
     });
 
     return Object.entries(monthsData).map(([mes, data]) => ({
@@ -84,11 +109,17 @@ const FinancialCharts = ({ transactions }: FinancialChartsProps) => {
       categories[categoryName] = (categories[categoryName] || 0) + amount;
     });
 
+    // Adicionar gastos dos cartões como categoria separada
+    const totalCardExpenses = creditCards.reduce((sum, card) => sum + Number(card.used_limit), 0);
+    if (totalCardExpenses > 0) {
+      categories['Cartões de Crédito'] = totalCardExpenses;
+    }
+
     return Object.entries(categories)
       .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [transactions]);
+  }, [transactions, creditCards]);
 
   // Análise de tendências
   const trend = useMemo(() => {
