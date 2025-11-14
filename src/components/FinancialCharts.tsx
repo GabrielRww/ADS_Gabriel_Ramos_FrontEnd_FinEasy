@@ -2,8 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Transaction {
   id: string;
@@ -39,63 +45,93 @@ const COLORS = ['#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899'
 const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState("6");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   // Calcular dados mensais
   const monthlyData = useMemo(() => {
-    const months = parseInt(selectedPeriod);
-    const now = new Date();
-    const monthsData: { [key: string]: { receitas: number; despesas: number; saldo: number } } = {};
+    const monthsData: { [key: string]: { receitas: number; despesas: number; saldo: number; date: Date } } = {};
 
-    // Inicializar últimos N meses
-    for (let i = months - 1; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-      monthsData[key] = { receitas: 0, despesas: 0, saldo: 0 };
-    }
-
-    // Filtrar transações
+    // Filtrar transações por período
     const filteredTransactions = transactions.filter(t => {
       if (selectedCategory !== "all" && t.categories?.name !== selectedCategory) return false;
+      
       const transactionDate = new Date(t.date);
-      const monthsAgo = new Date(now.getFullYear(), now.getMonth() - months, 1);
-      return transactionDate >= monthsAgo;
+      
+      // Se houver filtro personalizado, usar essas datas
+      if (startDate && endDate) {
+        return transactionDate >= startDate && transactionDate <= endDate;
+      }
+      
+      // Caso contrário, usar o período selecionado
+      if (selectedPeriod !== "custom") {
+        const months = parseInt(selectedPeriod);
+        const now = new Date();
+        const monthsAgo = new Date(now.getFullYear(), now.getMonth() - months, 1);
+        return transactionDate >= monthsAgo;
+      }
+      
+      return true;
     });
 
-    // Agregar dados das transações
+    // Agregar dados das transações (cria meses dinamicamente)
     filteredTransactions.forEach(t => {
       const date = new Date(t.date);
       const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-      if (monthsData[key]) {
-        const amount = Number(t.amount_brl || t.amount);
-        if (t.type === 'receita') {
-          monthsData[key].receitas += amount;
-        } else {
-          monthsData[key].despesas += amount;
-        }
+      
+      if (!monthsData[key]) {
+        monthsData[key] = { receitas: 0, despesas: 0, saldo: 0, date: new Date(date.getFullYear(), date.getMonth(), 1) };
+      }
+      
+      const amount = Number(t.amount_brl || t.amount);
+      if (t.type === 'receita') {
+        monthsData[key].receitas += amount;
+      } else {
+        monthsData[key].despesas += amount;
       }
     });
 
-    // Adicionar gastos dos cartões de crédito como despesas
-    // Distribuir o used_limit dos cartões no mês atual
-    const currentMonth = now.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-    if (monthsData[currentMonth]) {
-      creditCards.forEach(card => {
-        monthsData[currentMonth].despesas += Number(card.used_limit);
-      });
-    }
+    // Adicionar gastos dos cartões de crédito considerando o mês de criação
+    creditCards.forEach(card => {
+      const cardDate = new Date(card.created_at);
+      const key = cardDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      // Verificar se o cartão está dentro do período filtrado
+      let includeCard = false;
+      if (startDate && endDate) {
+        includeCard = cardDate >= startDate && cardDate <= endDate;
+      } else if (selectedPeriod !== "custom") {
+        const months = parseInt(selectedPeriod);
+        const now = new Date();
+        const monthsAgo = new Date(now.getFullYear(), now.getMonth() - months, 1);
+        includeCard = cardDate >= monthsAgo;
+      } else {
+        includeCard = true;
+      }
+      
+      if (includeCard) {
+        if (!monthsData[key]) {
+          monthsData[key] = { receitas: 0, despesas: 0, saldo: 0, date: new Date(cardDate.getFullYear(), cardDate.getMonth(), 1) };
+        }
+        monthsData[key].despesas += Number(card.used_limit);
+      }
+    });
 
-    // Recalcular saldo após adicionar cartões
+    // Recalcular saldo
     Object.keys(monthsData).forEach(key => {
       monthsData[key].saldo = monthsData[key].receitas - monthsData[key].despesas;
     });
 
-    return Object.entries(monthsData).map(([mes, data]) => ({
-      mes,
-      receitas: Number(data.receitas.toFixed(2)),
-      despesas: Number(data.despesas.toFixed(2)),
-      saldo: Number(data.saldo.toFixed(2))
-    }));
-  }, [transactions, selectedPeriod, selectedCategory]);
+    // Ordenar por data e retornar
+    return Object.entries(monthsData)
+      .sort(([, a], [, b]) => a.date.getTime() - b.date.getTime())
+      .map(([mes, data]) => ({
+        mes,
+        receitas: Number(data.receitas.toFixed(2)),
+        despesas: Number(data.despesas.toFixed(2)),
+        saldo: Number(data.saldo.toFixed(2))
+      }));
+  }, [transactions, selectedPeriod, selectedCategory, creditCards, startDate, endDate]);
 
   // Dados por categoria
   const categoryData = useMemo(() => {
@@ -175,7 +211,13 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
         <CardContent className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium mb-2 block">Período</label>
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <Select value={selectedPeriod} onValueChange={(value) => {
+              setSelectedPeriod(value);
+              if (value !== "custom") {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }
+            }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -183,9 +225,69 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
                 <SelectItem value="3">Últimos 3 meses</SelectItem>
                 <SelectItem value="6">Últimos 6 meses</SelectItem>
                 <SelectItem value="12">Último ano</SelectItem>
+                <SelectItem value="24">Últimos 2 anos</SelectItem>
+                <SelectItem value="custom">Período personalizado</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          
+          {selectedPeriod === "custom" && (
+            <>
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Data inicial</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP", { locale: ptBR }) : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Data final</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </>
+          )}
 
           <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium mb-2 block">Categoria</label>

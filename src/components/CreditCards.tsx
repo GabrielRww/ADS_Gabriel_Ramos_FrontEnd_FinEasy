@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, CreditCard, TrendingUp } from "lucide-react";
+import { Trash2, Plus, CreditCard, TrendingUp, Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -81,6 +81,7 @@ export const CreditCards = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editingCard, setEditingCard] = useState<CreditCardData | null>(null);
   const [formData, setFormData] = useState({
     card_name: "",
     card_brand: "",
@@ -148,6 +149,41 @@ export const CreditCards = () => {
       queryClient.invalidateQueries({ queryKey: ["credit-cards"] });
       toast({ title: "Sucesso", description: "Cartão adicionado com sucesso" });
       setShowForm(false);
+      setFormData({
+        card_name: "",
+        card_brand: "",
+        credit_limit: "",
+        used_limit: "",
+        closing_day: "",
+        due_day: "",
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateCardMutation = useMutation({
+    mutationFn: async (data: { id: string } & typeof formData) => {
+      const { error } = await supabase
+        .from("credit_cards")
+        .update({
+          card_name: data.card_name,
+          card_brand: data.card_brand,
+          credit_limit: parseFloat(data.credit_limit),
+          used_limit: parseFloat(data.used_limit || "0"),
+          closing_day: parseInt(data.closing_day),
+          due_day: parseInt(data.due_day),
+        })
+        .eq("id", data.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["credit-cards"] });
+      toast({ title: "Sucesso", description: "Cartão atualizado com sucesso" });
+      setShowForm(false);
+      setEditingCard(null);
       setFormData({
         card_name: "",
         card_brand: "",
@@ -237,6 +273,40 @@ export const CreditCards = () => {
     return recommendations;
   };
 
+  const handleEdit = (card: CreditCardData) => {
+    setEditingCard(card);
+    setFormData({
+      card_name: card.card_name,
+      card_brand: card.card_brand,
+      credit_limit: card.credit_limit.toString(),
+      used_limit: card.used_limit.toString(),
+      closing_day: card.closing_day.toString(),
+      due_day: card.due_day.toString(),
+    });
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingCard(null);
+    setFormData({
+      card_name: "",
+      card_brand: "",
+      credit_limit: "",
+      used_limit: "",
+      closing_day: "",
+      due_day: "",
+    });
+  };
+
+  const handleSubmit = () => {
+    if (editingCard) {
+      updateCardMutation.mutate({ ...formData, id: editingCard.id });
+    } else {
+      addCardMutation.mutate(formData);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -250,7 +320,7 @@ export const CreditCards = () => {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Novo Cartão</CardTitle>
+            <CardTitle>{editingCard ? "Editar Cartão" : "Novo Cartão"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
@@ -371,9 +441,23 @@ export const CreditCards = () => {
                 </div>
               </div>
 
-              <Button onClick={() => addCardMutation.mutate(formData)} disabled={addCardMutation.isPending}>
-                Adicionar
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={addCardMutation.isPending || updateCardMutation.isPending}
+                  className="flex-1"
+                >
+                  {editingCard ? "Atualizar" : "Adicionar"}
+                </Button>
+                {editingCard && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -398,6 +482,14 @@ export const CreditCards = () => {
                   </div>
                   <div className="flex gap-2 items-center">
                     <CardBrandLogo brand={card.card_brand} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(card)}
+                      className="text-white hover:bg-white/20"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
