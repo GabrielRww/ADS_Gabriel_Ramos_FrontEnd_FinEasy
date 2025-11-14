@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, CreditCard, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
 const CardBrandLogo = ({ brand }: { brand: string }) => {
   switch (brand) {
@@ -172,6 +173,31 @@ export const CreditCards = () => {
     },
   });
 
+  const calculateCardScore = (usedLimit: number, creditLimit: number): number => {
+    const usagePercentage = (usedLimit / creditLimit) * 100;
+    
+    // Base score calculation based on usage
+    let score = 100;
+    
+    if (usagePercentage > 90) {
+      score = 20 + (100 - usagePercentage) * 0.5; // 20-25
+    } else if (usagePercentage > 70) {
+      score = 30 + (90 - usagePercentage) * 1.5; // 30-60
+    } else if (usagePercentage > 50) {
+      score = 50 + (70 - usagePercentage) * 1.5; // 50-80
+    } else if (usagePercentage > 30) {
+      score = 70 + (50 - usagePercentage) * 1; // 70-90
+    } else {
+      score = 85 + (30 - usagePercentage) * 0.5; // 85-100
+    }
+    
+    // Bonus for having available credit (up to 10 points)
+    const availableLimit = creditLimit - usedLimit;
+    const bonusPoints = Math.min(10, (availableLimit / creditLimit) * 10);
+    
+    return Math.min(100, Math.round(score + bonusPoints));
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 50) return "text-yellow-600";
@@ -246,7 +272,7 @@ export const CreditCards = () => {
                       <div className="text-right">
                         <p className="text-xs opacity-80">Limite</p>
                         <p className="text-sm font-semibold">
-                          R$ {formData.credit_limit ? parseFloat(formData.credit_limit).toFixed(2) : '0.00'}
+                          R$ {formData.credit_limit ? formatCurrency(parseFloat(formData.credit_limit)) : '0,00'}
                         </p>
                       </div>
                     </div>
@@ -357,6 +383,7 @@ export const CreditCards = () => {
         {cards?.map((card) => {
           const usagePercentage = (card.used_limit / card.credit_limit) * 100;
           const availableLimit = card.credit_limit - card.used_limit;
+          const cardScore = calculateCardScore(card.used_limit, card.credit_limit);
           const recommendations = getRecommendations(card);
           const cardColors = getCardColors(card.card_name);
 
@@ -386,7 +413,7 @@ export const CreditCards = () => {
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-xs opacity-80">Limite Disponível</p>
-                      <p className="text-2xl font-bold">R$ {availableLimit.toFixed(2)}</p>
+                      <p className="text-2xl font-bold">R$ {formatCurrency(availableLimit)}</p>
                     </div>
                     <CreditCard className="h-8 w-8 opacity-50" />
                   </div>
@@ -403,7 +430,7 @@ export const CreditCards = () => {
                   </div>
                   <Progress value={usagePercentage} />
                   <p className="text-xs text-muted-foreground">
-                    R$ {card.used_limit.toFixed(2)} de R$ {card.credit_limit.toFixed(2)}
+                    R$ {formatCurrency(card.used_limit)} de R$ {formatCurrency(card.credit_limit)}
                   </p>
                 </div>
 
@@ -424,11 +451,11 @@ export const CreditCards = () => {
                       <TrendingUp className="h-4 w-4" />
                       <span className="text-sm font-medium">Score do Cartão</span>
                     </div>
-                    <span className={`text-2xl font-bold ${getScoreColor(card.score)}`}>
-                      {card.score.toFixed(0)}
+                    <span className={`text-2xl font-bold ${getScoreColor(cardScore)}`}>
+                      {cardScore}
                     </span>
                   </div>
-                  <Progress value={card.score} className="mb-2" />
+                  <Progress value={cardScore} className="mb-2" />
                   
                   {recommendations.length > 0 && (
                     <div className="mt-3 space-y-1">
