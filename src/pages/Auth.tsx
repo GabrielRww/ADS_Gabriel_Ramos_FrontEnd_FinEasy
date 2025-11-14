@@ -53,7 +53,9 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("Este e-mail já está cadastrado. Tente fazer login.");
+          // Tentar reenviar email de confirmação
+          toast.info("E-mail já cadastrado. Tentando reenviar confirmação...");
+          await handleResendConfirmation();
         } else {
           toast.error(error.message);
         }
@@ -64,6 +66,37 @@ const Auth = () => {
       toast.error("Erro ao criar conta. Tente novamente.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        // Se der erro no resend, tentar o método de reset de senha
+        console.log("Erro no resend, tentando reset de senha...");
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/dashboard`
+        });
+        
+        if (resetError) {
+          throw resetError;
+        }
+        
+        toast.success("E-mail de redefinição de senha enviado! Use-o para acessar sua conta.");
+      } else {
+        toast.success("E-mail de confirmação reenviado!");
+      }
+    } catch (error) {
+      console.error('Erro ao reenviar:', error);
+      toast.error("Não foi possível reenviar o e-mail. Tente fazer login ou contacte o suporte.");
     }
   };
 

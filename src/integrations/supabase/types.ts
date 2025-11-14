@@ -41,6 +41,93 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_cards: {
+        Row: {
+          card_brand: string
+          card_name: string
+          closing_day: number
+          created_at: string | null
+          credit_limit: number
+          due_day: number
+          id: string
+          score: number | null
+          updated_at: string | null
+          used_limit: number
+          user_id: string
+        }
+        Insert: {
+          card_brand: string
+          card_name: string
+          closing_day: number
+          created_at?: string | null
+          credit_limit?: number
+          due_day: number
+          id?: string
+          score?: number | null
+          updated_at?: string | null
+          used_limit?: number
+          user_id: string
+        }
+        Update: {
+          card_brand?: string
+          card_name?: string
+          closing_day?: number
+          created_at?: string | null
+          credit_limit?: number
+          due_day?: number
+          id?: string
+          score?: number | null
+          updated_at?: string | null
+          used_limit?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_goals: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          current_amount: number | null
+          goal_name: string
+          goal_type: string
+          id: string
+          monthly_contribution: number | null
+          target_amount: number
+          target_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          goal_name: string
+          goal_type: string
+          id?: string
+          monthly_contribution?: number | null
+          target_amount: number
+          target_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          goal_name?: string
+          goal_type?: string
+          id?: string
+          monthly_contribution?: number | null
+          target_amount?: number
+          target_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -111,6 +198,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_access_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          currency_display: string | null
+          date_format: string | null
+          id: string
+          language: string | null
+          notifications_enabled: boolean | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency_display?: string | null
+          date_format?: string | null
+          id?: string
+          language?: string | null
+          notifications_enabled?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency_display?: string | null
+          date_format?: string | null
+          id?: string
+          language?: string | null
+          notifications_enabled?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

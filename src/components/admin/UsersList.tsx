@@ -16,22 +16,32 @@ export const UsersList = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
+      // Buscar todos os perfis
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*");
 
       if (profilesError) throw profilesError;
 
+      // Buscar todos os roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*");
 
       if (rolesError) throw rolesError;
 
-      return profiles.map(profile => ({
-        ...profile,
-        role: roles.find(r => r.user_id === profile.id)?.role || 'user'
-      }));
+      // Buscar usuários do auth para pegar email
+      const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
+
+      // Combinar os dados
+      return profiles.map(profile => {
+        const authUser = authUsers?.find((u: any) => u.id === profile.id);
+        return {
+          ...profile,
+          email: authUser?.email || 'N/A',
+          role: (roles.find(r => r.user_id === profile.id)?.role || 'user') as UserRole
+        };
+      });
     },
   });
 
@@ -76,7 +86,7 @@ export const UsersList = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>ID</TableHead>
+            <TableHead>Email</TableHead>
             <TableHead>Permissão</TableHead>
             <TableHead>Data de Criação</TableHead>
             <TableHead>Ações</TableHead>
@@ -85,8 +95,8 @@ export const UsersList = () => {
         <TableBody>
           {users?.map((user) => (
             <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.full_name}</TableCell>
-              <TableCell className="font-mono text-xs">{user.id}</TableCell>
+              <TableCell className="font-medium">{user.full_name || 'Sem nome'}</TableCell>
+              <TableCell className="text-sm">{user.email}</TableCell>
               <TableCell>
                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                   {user.role}

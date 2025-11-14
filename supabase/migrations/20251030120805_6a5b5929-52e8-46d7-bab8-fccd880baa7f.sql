@@ -289,3 +289,98 @@ CREATE TRIGGER update_user_preferences_updated_at
 CREATE INDEX idx_user_access_logs_user_id ON public.user_access_logs(user_id);
 CREATE INDEX idx_user_access_logs_created_at ON public.user_access_logs(created_at DESC);
 CREATE INDEX idx_user_preferences_user_id ON public.user_preferences(user_id);
+-- Tabela de cartões de crédito fictícios
+CREATE TABLE public.credit_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  card_name TEXT NOT NULL,
+  card_brand TEXT NOT NULL,
+  credit_limit NUMERIC NOT NULL DEFAULT 0,
+  used_limit NUMERIC NOT NULL DEFAULT 0,
+  closing_day INTEGER NOT NULL CHECK (closing_day >= 1 AND closing_day <= 31),
+  due_day INTEGER NOT NULL CHECK (due_day >= 1 AND due_day <= 31),
+  score NUMERIC DEFAULT 50 CHECK (score >= 0 AND score <= 100),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Índices
+CREATE INDEX idx_credit_cards_user_id ON public.credit_cards(user_id);
+
+-- RLS
+ALTER TABLE public.credit_cards ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuários podem ver seus próprios cartões"
+  ON public.credit_cards FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem criar seus próprios cartões"
+  ON public.credit_cards FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem atualizar seus próprios cartões"
+  ON public.credit_cards FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem deletar seus próprios cartões"
+  ON public.credit_cards FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Trigger para updated_at
+CREATE TRIGGER update_credit_cards_updated_at
+  BEFORE UPDATE ON public.credit_cards
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Tabela de metas financeiras
+CREATE TABLE public.financial_goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  goal_name TEXT NOT NULL,
+  goal_type TEXT NOT NULL,
+  target_amount NUMERIC NOT NULL,
+  current_amount NUMERIC DEFAULT 0,
+  target_date DATE,
+  monthly_contribution NUMERIC DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Índices
+CREATE INDEX idx_financial_goals_user_id ON public.financial_goals(user_id);
+
+-- RLS
+ALTER TABLE public.financial_goals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuários podem ver suas próprias metas"
+  ON public.financial_goals FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem criar suas próprias metas"
+  ON public.financial_goals FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem atualizar suas próprias metas"
+  ON public.financial_goals FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem deletar suas próprias metas"
+  ON public.financial_goals FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Trigger para updated_at
+CREATE TRIGGER update_financial_goals_updated_at
+  BEFORE UPDATE ON public.financial_goals
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Políticas de admin para visualizar todos os dados
+CREATE POLICY "Admins podem ver todos os cartões"
+  ON public.credit_cards FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins podem ver todas as metas"
+  ON public.financial_goals FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));

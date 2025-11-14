@@ -5,64 +5,36 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  LogOut, 
-  Plus, 
-  TrendingDown, 
-  TrendingUp, 
-  Wallet, 
-  Shield, 
-  User as UserIcon, 
-  Eye,
-  BarChart3,
-  History,
-  Brain,
-  Mail
-} from "lucide-react";
+import { LogOut, Plus, TrendingDown, TrendingUp, Wallet, Shield, User as UserIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { useUserRole } from "@/hooks/useUserRole";
-
-// Components
 import TransactionForm from "@/components/TransactionForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import AIChat from "@/components/AIChat";
 import MonthlyReport from "@/components/MonthlyReport";
 import FinancialCharts from "@/components/FinancialCharts";
-
-// Types
-interface Transaction {
-  id: string;
-  type: "receita" | "despesa";
-  amount: number;
-  amount_brl?: number;
-  date: string;
-  categories?: {
-    name: string;
-  };
-}
+import { CreditCards } from "@/components/CreditCards";
+import { FinancialGoals } from "@/components/FinancialGoals";
+import { useQuery } from "@tanstack/react-query";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, History, Brain, Mail } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const { data: userRole } = useUserRole();
 
-  // Authentication Effect
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Check authentication
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
       }
-    };
-
-    checkAuth();
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
@@ -75,7 +47,6 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Data Queries
   const { data: transactions = [], refetch } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
@@ -106,92 +77,58 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  // Calculate Financial Totals
-  const financialSummary = {
-    receitas: transactions
-      .filter((t) => t.type === "receita")
-      .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0),
-    
-    despesas: transactions
-      .filter((t) => t.type === "despesa")
-      .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0),
-  };
-
-  const saldo = financialSummary.receitas - financialSummary.despesas;
-
-  // Event Handlers
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
   };
 
-  const handleFormSuccess = () => {
-    setShowForm(false);
-    setEditingTransaction(null);
-    refetch();
-  };
+  // Calculate totals
+  const receitas = transactions
+    .filter((t) => t.type === "receita")
+    .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-  const handleFormCancel = () => {
-    setShowForm(false);
-    setEditingTransaction(null);
-  };
+  const despesas = transactions
+    .filter((t) => t.type === "despesa")
+    .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-  const handleEditTransaction = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-    setShowForm(true);
-  };
+  const saldo = receitas - despesas;
 
-  // Role Badge Component
-  const getRoleBadge = (role: string) => {
-    const roleConfig = {
-      admin: { icon: Shield, text: "Admin", variant: "default" as const },
-      user: { icon: UserIcon, text: "Usuário", variant: "secondary" as const },
-      guest: { icon: Eye, text: "Convidado", variant: "outline" as const },
-    };
-
-    const config = roleConfig[role as keyof typeof roleConfig];
-    if (!config) return null;
-
-    const IconComponent = config.icon;
-
-    return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <IconComponent className="h-3 w-3" />
-        {config.text}
-      </Badge>
-    );
-  };
-
-  // Loading State
   if (!user) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header Section */}
-      <header className="bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground p-4 shadow-lg border-b border-primary-foreground/10">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground p-4 shadow-lg border-b border-primary-foreground/10">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="space-y-1">
+          <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">Controle Financeiro</h1>
-              {userRole && getRoleBadge(userRole)}
+              {userRole && (
+                <Badge 
+                  variant={userRole === 'admin' ? 'default' : userRole === 'user' ? 'secondary' : 'outline'}
+                  className="flex items-center gap-1"
+                >
+                  {userRole === 'admin' && <Shield className="h-3 w-3" />}
+                  {userRole === 'user' && <UserIcon className="h-3 w-3" />}
+                  {userRole === 'admin' ? 'Admin' : 'Usuário'}
+                </Badge>
+              )}
             </div>
-            <p className="text-sm opacity-90">
-              Olá, {profile?.full_name || user.email}
-            </p>
+            <p className="text-sm opacity-90">Olá, {profile?.full_name || user.email}</p>
           </div>
           <Button variant="secondary" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto p-4 space-y-6">
-        {/* Financial Summary Cards */}
-        <section className="grid md:grid-cols-3 gap-4">
+      <div className="container mx-auto p-4 space-y-6">
+        {/* Summary Cards */}
+        <div className="grid md:grid-cols-3 gap-4">
           <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -222,7 +159,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                R$ {financialSummary.receitas.toFixed(2)}
+                R$ {receitas.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Total de entradas
@@ -241,78 +178,106 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-red-600">
-                R$ {financialSummary.despesas.toFixed(2)}
+                R$ {despesas.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Total de saídas
               </p>
             </CardContent>
           </Card>
-        </section>
+        </div>
 
         {/* Add Transaction Button */}
-        <section className="flex justify-end">
+        <div className="flex justify-end">
           <Button onClick={() => setShowForm(!showForm)}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Transação
           </Button>
-        </section>
+        </div>
 
         {/* Transaction Form */}
         {showForm && (
-          <section>
-            <TransactionForm
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-              editingTransaction={editingTransaction}
-            />
-          </section>
+          <TransactionForm
+            onSuccess={() => {
+              setShowForm(false);
+              setEditingTransaction(null);
+              refetch();
+            }}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingTransaction(null);
+            }}
+            editingTransaction={editingTransaction}
+          />
         )}
 
-        {/* Main Content Tabs */}
-        <section>
-          <Tabs defaultValue="transactions" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
-              <TabsTrigger value="transactions" className="flex items-center gap-2 py-3">
-                <History className="h-4 w-4" />
-                <span className="hidden sm:inline">Transações</span>
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="flex items-center gap-2 py-3">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Relatórios</span>
-              </TabsTrigger>
-              <TabsTrigger value="ai" className="flex items-center gap-2 py-3">
-                <Brain className="h-4 w-4" />
-                <span className="hidden sm:inline">Análise IA</span>
-              </TabsTrigger>
-              <TabsTrigger value="email" className="flex items-center gap-2 py-3">
-                <Mail className="h-4 w-4" />
-                <span className="hidden sm:inline">Relatório Email</span>
-              </TabsTrigger>
-            </TabsList>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="transactions" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto">
+            <TabsTrigger value="transactions" className="flex items-center gap-2 py-3">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Transações</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2 py-3">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="cards" className="flex items-center gap-2 py-3">
+              <Wallet className="h-4 w-4" />
+              <span className="hidden sm:inline">Cartões</span>
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center gap-2 py-3">
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">Metas</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="flex items-center gap-2 py-3">
+              <Brain className="h-4 w-4" />
+              <span className="hidden sm:inline">Análise IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-2 py-3">
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Relatório Email</span>
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="transactions" className="space-y-6">
-              <TransactionHistory 
-                transactions={transactions} 
-                onUpdate={refetch}
-                onEdit={handleEditTransaction}
-              />
-            </TabsContent>
+          {/* Transaction History Tab */}
+          <TabsContent value="transactions" className="space-y-6">
+            <TransactionHistory 
+              transactions={transactions} 
+              onUpdate={refetch}
+              onEdit={(transaction) => {
+                setEditingTransaction(transaction);
+                setShowForm(true);
+              }}
+            />
+          </TabsContent>
 
-            <TabsContent value="reports" className="space-y-6">
-              <FinancialCharts transactions={transactions} />
-            </TabsContent>
+          {/* Reports and Charts Tab */}
+          <TabsContent value="reports" className="space-y-6">
+            <FinancialCharts transactions={transactions} />
+          </TabsContent>
 
-            <TabsContent value="ai" className="space-y-6">
-              <AIChat />
-            </TabsContent>
+          {/* Credit Cards Tab */}
+          <TabsContent value="cards" className="space-y-6">
+            <CreditCards />
+          </TabsContent>
 
-            <TabsContent value="email" className="space-y-6">
-              <MonthlyReport />
-            </TabsContent>
-          </Tabs>
-        </section>
-      </main>
+          {/* Financial Goals Tab */}
+          <TabsContent value="goals" className="space-y-6">
+            <FinancialGoals />
+          </TabsContent>
+
+          {/* AI Analysis Tab */}
+          <TabsContent value="ai" className="space-y-6">
+            <AIChat />
+          </TabsContent>
+
+          {/* Monthly Report Tab */}
+          <TabsContent value="email" className="space-y-6">
+            <MonthlyReport />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
