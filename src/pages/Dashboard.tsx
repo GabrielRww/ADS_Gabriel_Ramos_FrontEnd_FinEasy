@@ -28,11 +28,22 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
+        
+        // Check if user is admin and redirect to admin page
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (roleData?.role === 'admin') {
+          navigate("/admin");
+        }
       }
     });
 
@@ -41,6 +52,19 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
+        
+        // Check if user is admin and redirect to admin page
+        setTimeout(async () => {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (roleData?.role === 'admin') {
+            navigate("/admin");
+          }
+        }, 0);
       }
     });
 
