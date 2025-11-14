@@ -11,6 +11,60 @@ import { Trash2, Plus, CreditCard, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
+const CardBrandLogo = ({ brand }: { brand: string }) => {
+  switch (brand) {
+    case "Mastercard":
+      return (
+        <svg viewBox="0 0 48 32" className="h-6 w-auto">
+          <circle cx="15" cy="16" r="12" fill="#EB001B" />
+          <circle cx="33" cy="16" r="12" fill="#F79E1B" />
+          <path d="M24,8.5a11.9,11.9,0,0,0,0,15,11.9,11.9,0,0,0,0-15Z" fill="#FF5F00" />
+        </svg>
+      );
+    case "Visa":
+      return (
+        <svg viewBox="0 0 48 16" className="h-5 w-auto">
+          <text x="0" y="13" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial, sans-serif">VISA</text>
+        </svg>
+      );
+    case "Elo":
+      return (
+        <svg viewBox="0 0 48 32" className="h-6 w-auto">
+          <circle cx="12" cy="16" r="10" fill="#FFCB05" />
+          <circle cx="24" cy="16" r="10" fill="#00A4E0" />
+          <circle cx="36" cy="16" r="10" fill="#EE4023" />
+        </svg>
+      );
+    case "American Express":
+      return (
+        <svg viewBox="0 0 48 16" className="h-5 w-auto">
+          <text x="0" y="13" fill="white" fontSize="11" fontWeight="bold" fontFamily="Arial, sans-serif">AMEX</text>
+        </svg>
+      );
+    case "Hipercard":
+      return (
+        <svg viewBox="0 0 48 16" className="h-5 w-auto">
+          <text x="0" y="13" fill="white" fontSize="10" fontWeight="bold" fontFamily="Arial, sans-serif">HIPER</text>
+        </svg>
+      );
+    case "Diners Club":
+      return (
+        <svg viewBox="0 0 32 32" className="h-6 w-auto">
+          <circle cx="16" cy="16" r="14" fill="none" stroke="white" strokeWidth="2" />
+          <path d="M10,8 L10,24 M22,8 L22,24" stroke="white" strokeWidth="2" />
+        </svg>
+      );
+    case "Discover":
+      return (
+        <svg viewBox="0 0 48 16" className="h-5 w-auto">
+          <text x="0" y="13" fill="white" fontSize="9" fontWeight="bold" fontFamily="Arial, sans-serif">DISCOVER</text>
+        </svg>
+      );
+    default:
+      return <CreditCard className="h-6 w-6 opacity-50" />;
+  }
+};
+
 interface CreditCardData {
   id: string;
   card_name: string;
@@ -34,6 +88,30 @@ export const CreditCards = () => {
     closing_day: "",
     due_day: "",
   });
+
+  const bankOptions = [
+    { name: "Nubank", brand: "Mastercard", color: "from-purple-600 to-purple-800" },
+    { name: "Inter", brand: "Mastercard", color: "from-orange-500 to-orange-700" },
+    { name: "C6 Bank", brand: "Mastercard", color: "from-gray-800 to-gray-900" },
+    { name: "PicPay", brand: "Visa", color: "from-green-500 to-green-700" },
+    { name: "Itaú", brand: "Visa", color: "from-blue-600 to-blue-800" },
+    { name: "Bradesco", brand: "Visa", color: "from-red-600 to-red-800" },
+    { name: "Santander", brand: "Mastercard", color: "from-red-500 to-red-700" },
+    { name: "Banco do Brasil", brand: "Visa", color: "from-yellow-500 to-yellow-700" },
+    { name: "Caixa", brand: "Visa", color: "from-blue-500 to-blue-700" },
+    { name: "Outro", brand: "", color: "from-gray-600 to-gray-800" },
+  ];
+
+  const handleBankSelect = (bankName: string) => {
+    const selectedBank = bankOptions.find(b => b.name === bankName);
+    if (selectedBank) {
+      setFormData({
+        ...formData,
+        card_name: bankName,
+        card_brand: selectedBank.brand,
+      });
+    }
+  };
 
   const { data: cards, isLoading } = useQuery({
     queryKey: ["credit-cards"],
@@ -100,6 +178,22 @@ export const CreditCards = () => {
     return "text-red-600";
   };
 
+  const getCardColors = (brand: string) => {
+    const bank = bankOptions.find(b => b.name === brand);
+    if (bank) return { bg: bank.color, text: 'text-white', accent: 'bg-white/30' };
+    
+    const colors: Record<string, { bg: string; text: string; accent: string }> = {
+      'Visa': { bg: 'from-blue-700 to-blue-900', text: 'text-white', accent: 'bg-blue-400' },
+      'Mastercard': { bg: 'from-red-500 to-orange-600', text: 'text-white', accent: 'bg-orange-300' },
+      'Elo': { bg: 'from-yellow-500 to-yellow-700', text: 'text-white', accent: 'bg-yellow-300' },
+      'American Express': { bg: 'from-blue-500 to-blue-700', text: 'text-white', accent: 'bg-blue-300' },
+      'Hipercard': { bg: 'from-red-700 to-red-900', text: 'text-white', accent: 'bg-red-400' },
+      'Diners Club': { bg: 'from-blue-800 to-blue-950', text: 'text-white', accent: 'bg-blue-400' },
+      'Discover': { bg: 'from-orange-600 to-orange-800', text: 'text-white', accent: 'bg-orange-300' },
+    };
+    return colors[brand] || { bg: 'from-gray-600 to-gray-800', text: 'text-white', accent: 'bg-gray-400' };
+  };
+
   const getRecommendations = (card: CreditCardData) => {
     const recommendations = [];
     const usagePercentage = (card.used_limit / card.credit_limit) * 100;
@@ -134,14 +228,53 @@ export const CreditCards = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
+              {/* Preview do Cartão */}
+              {formData.card_name && (
+                <div className={`relative h-40 bg-gradient-to-br ${bankOptions.find(b => b.name === formData.card_name)?.color || 'from-gray-600 to-gray-800'} p-6 text-white rounded-lg animate-scale-in`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs opacity-80 mb-1">Banco</p>
+                      <h3 className="text-xl font-bold">{formData.card_name}</h3>
+                    </div>
+                    <CardBrandLogo brand={formData.card_brand} />
+                  </div>
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <CardBrandLogo brand={formData.card_brand} />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs opacity-80">Limite</p>
+                        <p className="text-sm font-semibold">
+                          R$ {formData.credit_limit ? parseFloat(formData.credit_limit).toFixed(2) : '0.00'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Nome do Cartão</Label>
-                  <Input
+                  <Label>Banco / Nome do Cartão</Label>
+                  <Select
                     value={formData.card_name}
-                    onChange={(e) => setFormData({ ...formData, card_name: e.target.value })}
-                    placeholder="Ex: Meu Nubank"
-                  />
+                    onValueChange={handleBankSelect}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o banco" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bankOptions.map((bank) => (
+                        <SelectItem key={bank.name} value={bank.name}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded bg-gradient-to-br ${bank.color}`}></div>
+                            {bank.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Bandeira</Label>
@@ -153,12 +286,13 @@ export const CreditCards = () => {
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Nubank">Nubank</SelectItem>
-                      <SelectItem value="Inter">Inter</SelectItem>
-                      <SelectItem value="C6 Bank">C6 Bank</SelectItem>
-                      <SelectItem value="PicPay">PicPay</SelectItem>
-                      <SelectItem value="Itaú">Itaú</SelectItem>
-                      <SelectItem value="Bradesco">Bradesco</SelectItem>
+                      <SelectItem value="Visa">Visa</SelectItem>
+                      <SelectItem value="Mastercard">Mastercard</SelectItem>
+                      <SelectItem value="Elo">Elo</SelectItem>
+                      <SelectItem value="American Express">American Express</SelectItem>
+                      <SelectItem value="Hipercard">Hipercard</SelectItem>
+                      <SelectItem value="Diners Club">Diners Club</SelectItem>
+                      <SelectItem value="Discover">Discover</SelectItem>
                       <SelectItem value="Outro">Outro</SelectItem>
                     </SelectContent>
                   </Select>
@@ -224,39 +358,56 @@ export const CreditCards = () => {
           const usagePercentage = (card.used_limit / card.credit_limit) * 100;
           const availableLimit = card.credit_limit - card.used_limit;
           const recommendations = getRecommendations(card);
+          const cardColors = getCardColors(card.card_name);
 
           return (
-            <Card key={card.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  <CardTitle className="text-lg">{card.card_name}</CardTitle>
+            <Card key={card.id} className="overflow-hidden">
+              {/* Visual Credit Card */}
+              <div className={`relative h-48 bg-gradient-to-br ${cardColors.bg} p-6 text-white rounded-t-lg`}>
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <p className="text-xs opacity-80 mb-1">Nome do Cartão</p>
+                    <h3 className="text-xl font-bold">{card.card_name}</h3>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <CardBrandLogo brand={card.card_brand} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteCardMutation.mutate(card.id)}
+                      className="text-white hover:bg-white/20"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteCardMutation.mutate(card.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Badge>{card.card_brand}</Badge>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-xs opacity-80">Limite Disponível</p>
+                      <p className="text-2xl font-bold">R$ {availableLimit.toFixed(2)}</p>
+                    </div>
+                    <CreditCard className="h-8 w-8 opacity-50" />
+                  </div>
+                </div>
+              </div>
 
+              <CardContent className="pt-6 space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Limite Utilizado</span>
                     <span className="font-bold">
-                      R$ {card.used_limit.toFixed(2)} / R$ {card.credit_limit.toFixed(2)}
+                      {usagePercentage.toFixed(1)}%
                     </span>
                   </div>
                   <Progress value={usagePercentage} />
-                  <p className="text-sm text-muted-foreground">
-                    Disponível: R$ {availableLimit.toFixed(2)}
+                  <p className="text-xs text-muted-foreground">
+                    R$ {card.used_limit.toFixed(2)} de R$ {card.credit_limit.toFixed(2)}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-4 text-sm border-t pt-4">
                   <div>
                     <p className="text-muted-foreground">Fecha dia</p>
                     <p className="font-semibold">{card.closing_day}</p>
