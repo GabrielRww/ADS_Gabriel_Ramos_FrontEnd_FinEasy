@@ -5,11 +5,11 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, LogOut } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { UsersList } from "@/components/admin/UsersList";
 import { AccessLogs } from "@/components/admin/AccessLogs";
-import { UserPreferences } from "@/components/admin/UserPreferences";
 import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
@@ -57,6 +57,15 @@ const Admin = () => {
     }
   }, [userRole, isLoading, navigate, toast]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Logout realizado",
+      description: "Você saiu do sistema com sucesso.",
+    });
+    navigate("/");
+  };
+
   if (isLoading || !user) {
     return (
       <div className="container mx-auto py-8 space-y-8">
@@ -72,11 +81,17 @@ const Admin = () => {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Painel Administrativo</h1>
-        <p className="text-muted-foreground">
-          Gerencie usuários, permissões e visualize logs de acesso
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Painel Administrativo</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários, permissões e visualize logs de acesso
+          </p>
+        </div>
+        <Button onClick={handleLogout} variant="outline" className="gap-2">
+          <LogOut className="h-4 w-4" />
+          Sair
+        </Button>
       </div>
 
       <Alert>
@@ -88,10 +103,9 @@ const Admin = () => {
       </Alert>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="logs">Histórico de Acesso</TabsTrigger>
-          <TabsTrigger value="preferences">Preferências</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -118,20 +132,6 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <AccessLogs />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="preferences" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferências de Usuários</CardTitle>
-              <CardDescription>
-                Visualize as preferências de exibição dos usuários
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserPreferences />
             </CardContent>
           </Card>
         </TabsContent>
