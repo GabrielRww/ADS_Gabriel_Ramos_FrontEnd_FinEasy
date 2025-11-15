@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, History, Brain, Download } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -142,37 +143,49 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground p-4 shadow-lg border-b border-primary-foreground/10">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">Controle Financeiro</h1>
-              {userRole && (
-                <Badge 
-                  variant={userRole === 'admin' ? 'default' : userRole === 'user' ? 'secondary' : 'outline'}
-                  className="flex items-center gap-1"
-                >
-                  {userRole === 'admin' && <Shield className="h-3 w-3" />}
-                  {userRole === 'user' && <UserIcon className="h-3 w-3" />}
-                  {userRole === 'admin' ? 'Admin' : 'Usuário'}
-                </Badge>
-              )}
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    Controle Financeiro
+                  </h1>
+                  {userRole && (
+                    <Badge 
+                      variant={userRole === "admin" ? "default" : "secondary"}
+                      className="flex items-center gap-1 animate-fade-in"
+                    >
+                      {userRole === "admin" && <Shield className="h-3 w-3" />}
+                      {userRole === "user" && <UserIcon className="h-3 w-3" />}
+                      {userRole === "admin" ? "Admin" : "Usuário"}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Olá, {profile?.full_name || user.email}
+                </p>
+              </div>
             </div>
-            <p className="text-sm opacity-90">Olá, {profile?.full_name || user.email}</p>
+            
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button variant="outline" onClick={handleLogout} className="hover:bg-destructive hover:text-destructive-foreground transition-colors">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
-          <Button variant="secondary" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto p-4 space-y-6">
+      <main className="container mx-auto p-4 space-y-6 animate-fade-in">
         {/* Summary Cards */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg">
+          <Card variant="glass" className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-xl hover:scale-[1.02] duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Saldo Atual
@@ -182,26 +195,26 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-3xl font-bold transition-colors ${saldo >= 0 ? "text-success" : "text-destructive"}`}>
                 R$ {saldo.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {saldo >= 0 ? 'Situação positiva' : 'Atenção ao saldo'}
+                {saldo >= 0 ? "Situação positiva" : "Atenção ao saldo"}
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-green-500/20 hover:border-green-500/40 transition-all hover:shadow-lg">
+          <Card variant="glass" className="border-2 border-success/20 hover:border-success/40 transition-all hover:shadow-xl hover:scale-[1.02] duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Receitas
               </CardTitle>
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-success/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-success" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-success">
                 R$ {receitas.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -210,17 +223,17 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-red-500/20 hover:border-red-500/40 transition-all hover:shadow-lg">
+          <Card variant="glass" className="border-2 border-destructive/20 hover:border-destructive/40 transition-all hover:shadow-xl hover:scale-[1.02] duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Despesas
               </CardTitle>
-              <div className="p-2 bg-red-500/10 rounded-lg">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <TrendingDown className="h-5 w-5 text-destructive" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">
+              <div className="text-3xl font-bold text-destructive">
                 R$ {despesas.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -320,7 +333,7 @@ const Dashboard = () => {
             <MonthlyReport transactions={transactions} creditCards={creditCards} />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 };

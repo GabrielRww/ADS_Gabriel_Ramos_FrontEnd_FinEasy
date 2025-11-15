@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { UsersList } from "@/components/admin/UsersList";
 import { AccessLogs } from "@/components/admin/AccessLogs";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -80,62 +81,73 @@ const Admin = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Painel Administrativo</h1>
-          <p className="text-muted-foreground">
-            Gerencie usuários, permissões e visualize logs de acesso
-          </p>
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Painel Administrativo
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Gerencie usuários, permissões e visualize logs de acesso
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button onClick={handleLogout} variant="outline" className="gap-2 hover:bg-destructive hover:text-destructive-foreground transition-colors">
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
+          </div>
         </div>
-        <Button onClick={handleLogout} variant="outline" className="gap-2">
-          <LogOut className="h-4 w-4" />
-          Sair
-        </Button>
-      </div>
+      </header>
 
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Área Restrita</AlertTitle>
-        <AlertDescription>
-          Esta página é acessível apenas para administradores. Todas as ações são registradas.
-        </AlertDescription>
-      </Alert>
+      <main className="container mx-auto px-4 py-8 space-y-8 animate-fade-in">
+        <Alert className="border-2 border-warning/20 bg-warning/5">
+          <AlertCircle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning">Área Restrita</AlertTitle>
+          <AlertDescription>
+            Esta página é acessível apenas para administradores. Todas as ações são registradas.
+          </AlertDescription>
+        </Alert>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="logs">Histórico de Acesso</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users">Usuários</TabsTrigger>
+            <TabsTrigger value="logs">Histórico de Acesso</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciar Usuários</CardTitle>
-              <CardDescription>
-                Visualize e gerencie os usuários do sistema e suas permissões
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UsersList />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="users" className="space-y-4">
+            <Card className="border-2 hover:shadow-lg transition-all">
+              <CardHeader>
+                <CardTitle>Gerenciar Usuários</CardTitle>
+                <CardDescription>
+                  Visualize e gerencie os usuários do sistema e suas permissões
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UsersList />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="logs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Histórico de Acesso</CardTitle>
-              <CardDescription>
-                Visualize todos os acessos ao sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AccessLogs />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="logs" className="space-y-4">
+            <Card className="border-2 hover:shadow-lg transition-all">
+              <CardHeader>
+                <CardTitle>Histórico de Acesso</CardTitle>
+                <CardDescription>
+                  Visualize todos os acessos ao sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AccessLogs />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };

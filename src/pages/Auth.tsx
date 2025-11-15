@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import fineasyLogo from "@/assets/fineasy-logo.png";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -118,25 +119,29 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-background transition-colors duration-300 p-4 relative">
       <Link to="/landing" className="absolute top-4 left-4">
-        <Button variant="ghost" size="sm" className="hover-scale">
+        <Button variant="ghost" size="sm" className="hover:scale-110 transition-transform">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
       </Link>
+
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       
-      <Card className="w-full max-w-md animate-scale-in shadow-lg">
+      <Card variant="glass-strong" className="w-full max-w-md animate-fade-in shadow-2xl border-2">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center animate-fade-in">
             <img 
               src={fineasyLogo} 
               alt="Fineasy Logo" 
-              className="w-16 h-16 hover-scale"
+              className="w-16 h-16 hover:scale-110 transition-transform duration-300"
             />
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center justify-center gap-2">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center justify-center gap-2">
               <Sparkles className="text-primary h-6 w-6" />
               Fineasy
             </CardTitle>
