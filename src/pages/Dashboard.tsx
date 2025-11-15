@@ -17,7 +17,7 @@ import { FinancialGoals } from "@/components/FinancialGoals";
 import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, History, Brain, Mail } from "lucide-react";
+import { BarChart3, History, Brain, Download } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -278,8 +278,8 @@ const Dashboard = () => {
               <span className="hidden sm:inline">Análise IA</span>
             </TabsTrigger>
             <TabsTrigger value="email" className="flex items-center gap-2 py-3">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Relatório Email</span>
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Relatorios</span>
             </TabsTrigger>
           </TabsList>
 
@@ -317,7 +317,7 @@ const Dashboard = () => {
 
           {/* Monthly Report Tab */}
           <TabsContent value="email" className="space-y-6">
-            <MonthlyReport />
+            <MonthlyReport transactions={transactions} creditCards={creditCards} />
           </TabsContent>
         </Tabs>
       </div>
