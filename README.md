@@ -834,7 +834,7 @@ SELECT role FROM user_roles WHERE user_id = auth.uid();
 
 ### Desenvolvedor Principal
 **Gabriel Ramos**
-- 📧 **Email**: gabriel@example.com
+- 📧 **Email**: gabrieelramoswendl4nd@gmail.com
 - 🐙 **GitHub**: [@GabrielRww](https://github.com/GabrielRww)
 - 💼 **LinkedIn**: [Gabriel Ramos](https://linkedin.com/in/gabriel-ramos)
 
