@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Plus, TrendingDown, TrendingUp, Wallet, Shield, User as UserIcon, Eye } from "lucide-react";
+import { LogOut, Plus, TrendingDown, TrendingUp, Wallet, Shield, User as UserIcon, Eye, TrendingUpIcon } from "lucide-react";
 import { toast } from "sonner";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionHistory from "@/components/TransactionHistory";
@@ -172,6 +172,14 @@ const Dashboard = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/exchange-history")}
+                className="hover:bg-primary/10 transition-colors"
+              >
+                <TrendingUpIcon className="mr-2 h-4 w-4" />
+                Cotações
+              </Button>
               <ThemeToggle />
               <Button variant="outline" onClick={handleLogout} className="hover:bg-destructive hover:text-destructive-foreground transition-colors">
                 <LogOut className="mr-2 h-4 w-4" />

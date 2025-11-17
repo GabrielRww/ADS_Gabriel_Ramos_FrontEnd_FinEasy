@@ -8,7 +8,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
-import AdminSetup from "./components/AdminSetup";
+import ExchangeHistory from "./pages/ExchangeHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +25,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/admin-setup" element={<AdminSetup />} />
+          <Route path="/exchange-history" element={<ExchangeHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -34,4 +34,4 @@ const App = () => (
   </QueryClientProvider>
 );
 
-export default App
+export default App;
