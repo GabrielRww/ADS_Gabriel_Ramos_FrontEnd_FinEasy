@@ -16,7 +16,7 @@ export const UsersList = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      // Buscar todos os perfis
+      // Buscar todos os perfis com email
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*");
@@ -30,18 +30,12 @@ export const UsersList = () => {
 
       if (rolesError) throw rolesError;
 
-      // Buscar usuários do auth para pegar email
-      const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
-
       // Combinar os dados
-      return profiles.map(profile => {
-        const authUser = authUsers?.find((u: any) => u.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || 'N/A',
-          role: (roles.find(r => r.user_id === profile.id)?.role || 'user') as UserRole
-        };
-      });
+      return profiles.map(profile => ({
+        ...profile,
+        email: profile.email || 'Email não disponível',
+        role: (roles.find(r => r.user_id === profile.id)?.role || 'user') as UserRole
+      }));
     },
   });
 

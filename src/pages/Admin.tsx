@@ -2,14 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, LogOut } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { UsersList } from "@/components/admin/UsersList";
-import { AccessLogs } from "@/components/admin/AccessLogs";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -90,7 +88,7 @@ const Admin = () => {
                 Painel Administrativo
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Gerencie usuários, permissões e visualize logs de acesso
+                Gerencie usuários e suas permissões
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -113,40 +111,17 @@ const Admin = () => {
           </AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="logs">Histórico de Acesso</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users" className="space-y-4">
-            <Card className="border-2 hover:shadow-lg transition-all">
-              <CardHeader>
-                <CardTitle>Gerenciar Usuários</CardTitle>
-                <CardDescription>
-                  Visualize e gerencie os usuários do sistema e suas permissões
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UsersList />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="logs" className="space-y-4">
-            <Card className="border-2 hover:shadow-lg transition-all">
-              <CardHeader>
-                <CardTitle>Histórico de Acesso</CardTitle>
-                <CardDescription>
-                  Visualize todos os acessos ao sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AccessLogs />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <Card variant="glass" className="border-2 hover:shadow-lg transition-all">
+          <CardHeader>
+            <CardTitle>Gerenciar Usuários</CardTitle>
+            <CardDescription>
+              Visualize e gerencie os usuários do sistema e suas permissões
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <UsersList />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

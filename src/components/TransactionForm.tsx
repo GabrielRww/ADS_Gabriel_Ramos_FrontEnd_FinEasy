@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface TransactionFormProps {
   onSuccess: () => void;
@@ -33,6 +34,36 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
     categoryId: editingTransaction?.category_id || "",
     date: editingTransaction?.date || new Date().toISOString().split("T")[0],
   });
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
+
+  // Fetch exchange rates
+  const { data: exchangeRates } = useQuery({
+    queryKey: ["exchangeRates"],
+    queryFn: async () => {
+      const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+      const data = await response.json();
+      return {
+        USD_BRL: data.rates.BRL,
+        EUR_BRL: data.rates.BRL / data.rates.EUR,
+      };
+    },
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  });
+
+  // Calculate converted amount in real-time
+  useEffect(() => {
+    if (formData.amount && formData.currency !== "BRL" && exchangeRates) {
+      const amount = Number(formData.amount);
+      if (!isNaN(amount) && amount > 0) {
+        const rate = formData.currency === "USD" ? exchangeRates.USD_BRL : exchangeRates.EUR_BRL;
+        setConvertedAmount(amount * rate);
+      } else {
+        setConvertedAmount(null);
+      }
+    } else {
+      setConvertedAmount(null);
+    }
+  }, [formData.amount, formData.currency, exchangeRates]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -58,14 +89,9 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
       let amountBrl = Number(formData.amount);
 
       // Convert currency if not BRL
-      if (formData.currency !== "BRL") {
-        const response = await fetch(
-          `https://api.exchangerate.host/convert?from=${formData.currency}&to=BRL&amount=${formData.amount}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          amountBrl = data.result;
-        }
+      if (formData.currency !== "BRL" && exchangeRates) {
+        const rate = formData.currency === "USD" ? exchangeRates.USD_BRL : exchangeRates.EUR_BRL;
+        amountBrl = Number(formData.amount) * rate;
       }
 
       if (editingTransaction) {
@@ -189,9 +215,19 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
                   <SelectItem value="BRL">BRL (Real)</SelectItem>
                   <SelectItem value="USD">USD (Dólar)</SelectItem>
                   <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                  <SelectItem value="GBP">GBP (Libra)</SelectItem>
                 </SelectContent>
               </Select>
+              {convertedAmount && exchangeRates && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>
+                    ≈ R$ {formatCurrency(convertedAmount)} 
+                    <span className="text-xs ml-1">
+                      (Cotação: 1 {formData.currency} = R$ {formatCurrency(formData.currency === "USD" ? exchangeRates.USD_BRL : exchangeRates.EUR_BRL)})
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
