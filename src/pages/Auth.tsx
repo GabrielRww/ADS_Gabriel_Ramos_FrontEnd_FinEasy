@@ -17,8 +17,20 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
+    // Check if we're in password reset mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    
+    if (mode === 'reset') {
+      setIsUpdatingPassword(true);
+    }
+
     // Check if user is already logged in
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
@@ -118,6 +130,65 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=reset`,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+        setIsResettingPassword(false);
+        setEmail("");
+      }
+    } catch (error) {
+      toast.error("Erro ao enviar e-mail de recuperação. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Senha atualizada com sucesso!");
+        setIsUpdatingPassword(false);
+        setNewPassword("");
+        setConfirmPassword("");
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar senha. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background transition-colors duration-300 p-4 relative">
       <Link to="/landing" className="absolute top-4 left-4">
@@ -145,53 +216,159 @@ const Auth = () => {
               <Sparkles className="text-primary h-6 w-6" />
               Fineasy
             </CardTitle>
-            <CardDescription className="mt-2">Entre ou crie sua conta</CardDescription>
+            <CardDescription className="mt-2">
+              {isUpdatingPassword ? "Redefinir sua senha" : "Entre ou crie sua conta"}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="animate-fade-in">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login" className="transition-all">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="transition-all">Criar Conta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <form onSubmit={handleSignIn} className="space-y-4">
+          {isUpdatingPassword ? (
+            <div className="space-y-4">
+              <div className="text-center space-y-2 mb-4">
+                <h3 className="text-lg font-semibold">Nova Senha</h3>
+                <p className="text-sm text-muted-foreground">
+                  Digite sua nova senha abaixo
+                </p>
+              </div>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">E-mail</Label>
+                  <Label htmlFor="new-password">Nova Senha</Label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="new-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     required
+                    minLength={6}
                     className="transition-all focus:scale-[1.02]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Senha</Label>
+                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
                   <Input
-                    id="login-password"
+                    id="confirm-password"
                     type="password"
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    minLength={6}
                     className="transition-all focus:scale-[1.02]"
                   />
+                  <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
                 </div>
                 <Button type="submit" className="w-full hover-scale" disabled={loading}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
+                      Atualizando...
                     </>
                   ) : (
-                    "Entrar"
+                    "Atualizar Senha"
                   )}
                 </Button>
               </form>
+            </div>
+          ) : (
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login" className="transition-all">Entrar</TabsTrigger>
+                <TabsTrigger value="signup" className="transition-all">Criar Conta</TabsTrigger>
+              </TabsList>
+
+            <TabsContent value="login">
+              {isResettingPassword ? (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="text-center space-y-2 mb-4">
+                    <h3 className="text-lg font-semibold">Recuperar Senha</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Digite seu e-mail para receber o link de recuperação
+                    </p>
+                  </div>
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">E-mail</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="transition-all focus:scale-[1.02]"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full hover-scale" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        "Enviar E-mail de Recuperação"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        setIsResettingPassword(false);
+                        setEmail("");
+                      }}
+                    >
+                      Voltar para o Login
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">E-mail</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="transition-all focus:scale-[1.02]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password">Senha</Label>
+                      <button
+                        type="button"
+                        onClick={() => setIsResettingPassword(true)}
+                        className="text-xs text-primary hover:underline transition-all"
+                      >
+                        Esqueceu a senha?
+                      </button>
+                    </div>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="transition-all focus:scale-[1.02]"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full hover-scale" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      "Entrar"
+                    )}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
 
             <TabsContent value="signup">
@@ -247,6 +424,7 @@ const Auth = () => {
               </form>
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>
