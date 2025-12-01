@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ExchangeAlerts } from "@/components/ExchangeAlerts";
+import { useExchangeAlerts } from "@/hooks/useExchangeAlerts";
 
 interface ExchangeRate {
   date: string;
@@ -22,15 +24,21 @@ const ExchangeHistory = () => {
   const [currentRates, setCurrentRates] = useState({ USD: 0, EUR: 0 });
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>(30);
   const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "EUR">("USD");
+  
+  // Enable exchange alerts checking
+  useExchangeAlerts();
 
   useEffect(() => {
     const fetchHistoricalRates = async () => {
       try {
-        // Fetch current rates
-        const currentResponse = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
-        const currentData = await currentResponse.json();
-        const usdToBrl = currentData.rates.BRL;
-        const eurToBrl = currentData.rates.BRL / currentData.rates.EUR;
+        // Fetch current rates for both USD and EUR to BRL
+        const usdResponse = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+        const usdData = await usdResponse.json();
+        const usdToBrl = usdData.rates.BRL;
+        
+        const eurResponse = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+        const eurData = await eurResponse.json();
+        const eurToBrl = eurData.rates.BRL;
         
         setCurrentRates({ USD: usdToBrl, EUR: eurToBrl });
 
@@ -41,18 +49,27 @@ const ExchangeHistory = () => {
         for (let i = selectedPeriod - 1; i >= 0; i--) {
           const date = subDays(today, i);
           
-          // Generate realistic variation (±2% from current rate with some volatility)
-          const volatility = (Math.random() - 0.5) * 0.04; // -2% to +2%
-          const trendFactor = (i / selectedPeriod) * 0.03; // Slight trend over time
-          
-          const usdRate = usdToBrl * (1 + volatility - trendFactor);
-          const eurRate = eurToBrl * (1 + volatility * 1.1 - trendFactor * 0.9);
-          
-          historicalData.push({
-            date: format(date, "dd/MM", { locale: ptBR }),
-            USD: parseFloat(usdRate.toFixed(2)),
-            EUR: parseFloat(eurRate.toFixed(2)),
-          });
+          // Last point should be exactly the current rate
+          if (i === 0) {
+            historicalData.push({
+              date: format(date, "dd/MM", { locale: ptBR }),
+              USD: parseFloat(usdToBrl.toFixed(2)),
+              EUR: parseFloat(eurToBrl.toFixed(2)),
+            });
+          } else {
+            // Generate realistic variation for historical points
+            const volatility = (Math.random() - 0.5) * 0.04; // -2% to +2%
+            const trendFactor = (i / selectedPeriod) * 0.03; // Slight trend over time
+            
+            const usdRate = usdToBrl * (1 + volatility - trendFactor);
+            const eurRate = eurToBrl * (1 + volatility * 1.1 - trendFactor * 0.9);
+            
+            historicalData.push({
+              date: format(date, "dd/MM", { locale: ptBR }),
+              USD: parseFloat(usdRate.toFixed(2)),
+              EUR: parseFloat(eurRate.toFixed(2)),
+            });
+          }
         }
 
         setData(historicalData);
@@ -114,6 +131,10 @@ const ExchangeHistory = () => {
           </Card>
         ) : (
           <>
+            <div className="mb-6">
+              <ExchangeAlerts />
+            </div>
+
             <Card className="backdrop-blur-lg bg-card/50 border-border/50 mb-6">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-4">

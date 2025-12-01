@@ -4,10 +4,8 @@ import { ArrowRight, TrendingUp, PieChart, Calendar, DollarSign, Sparkles } from
 import { Link } from "react-router-dom";
 import fineasyLogo from "@/assets/fineasy-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
+  return <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header with Theme Toggle */}
       <header className="fixed top-0 right-0 z-50 p-4">
         <ThemeToggle />
@@ -17,13 +15,9 @@ const Landing = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
           <div className="flex justify-center mb-8">
-            <img 
-              src={fineasyLogo} 
-              alt="Fineasy Logo" 
-              className="w-24 h-24 animate-fade-in hover:scale-110 transition-transform duration-300"
-            />
+            <img src={fineasyLogo} alt="Fineasy Logo" className="w-24 h-24 animate-fade-in hover:scale-110 transition-transform duration-300" />
           </div>
-          <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+          <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent font-sans">
             Fineasy
           </h1>
           <p className="text-2xl font-semibold mb-6 text-foreground">
@@ -52,8 +46,12 @@ const Landing = () => {
             </p>
           </Card>
 
-          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{ animationDelay: "0.1s" }}>
+          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{
+          animationDelay: "0.1s"
+        }}>
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{
+            animationDelay: "0.1s"
+          }}>
               <TrendingUp className="text-primary" />
             </div>
             <h3 className="font-semibold mb-2">Saldo em Tempo Real</h3>
@@ -62,8 +60,12 @@ const Landing = () => {
             </p>
           </Card>
 
-          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{ animationDelay: "0.2s" }}>
+          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{
+          animationDelay: "0.2s"
+        }}>
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{
+            animationDelay: "0.2s"
+          }}>
               <PieChart className="text-primary" />
             </div>
             <h3 className="font-semibold mb-2">Categorias Inteligentes</h3>
@@ -72,8 +74,12 @@ const Landing = () => {
             </p>
           </Card>
 
-          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{ animationDelay: "0.3s" }}>
+          <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in" style={{
+          animationDelay: "0.3s"
+        }}>
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in" style={{
+            animationDelay: "0.3s"
+          }}>
               <Calendar className="text-primary" />
             </div>
             <h3 className="font-semibold mb-2">Histórico Completo</h3>
@@ -98,21 +104,23 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in">
-                    <span className="text-5xl">📧</span>
+                    <span className="text-5xl">📊</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
-                    Relatórios por E-mail
-                  </h3>
+                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Relatórios por PDF e Excel</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    Receba resumos mensais automáticos com análises detalhadas das suas finanças
+                    Baixe resumos mensais completos com análises detalhadas das suas finanças
                   </p>
                 </div>
               </div>
 
-              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{
+              animationDelay: "0.1s"
+            }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.1s" }}>
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{
+                  animationDelay: "0.1s"
+                }}>
                     <span className="text-5xl">💱</span>
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
@@ -124,10 +132,14 @@ const Landing = () => {
                 </div>
               </div>
 
-              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+              <div className="group relative p-6 rounded-xl border-2 border-primary/10 bg-card/80 backdrop-blur-sm hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{
+              animationDelay: "0.2s"
+            }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative z-10 text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{ animationDelay: "0.2s" }}>
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 mb-4 group-hover:scale-110 transition-transform animate-scale-in" style={{
+                  animationDelay: "0.2s"
+                }}>
                     <span className="text-5xl">🤖</span>
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
@@ -159,8 +171,6 @@ const Landing = () => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
