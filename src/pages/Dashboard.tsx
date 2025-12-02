@@ -28,14 +28,12 @@ const Dashboard = () => {
   const { data: userRole } = useUserRole();
 
   useEffect(() => {
-    // Check authentication
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
         
-        // Check if user is admin and redirect to admin page
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
@@ -54,7 +52,6 @@ const Dashboard = () => {
       } else {
         setUser(session.user);
         
-        // Check if user is admin and redirect to admin page
         setTimeout(async () => {
           const { data: roleData } = await supabase
             .from('user_roles')
@@ -122,12 +119,10 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // Calculate totals
   const receitas = transactions
     .filter((t) => t.type === "receita")
     .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-  // Incluir gastos dos cartões de crédito nas despesas
   const despesasTransacoes = transactions
     .filter((t) => t.type === "despesa")
     .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
@@ -144,7 +139,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
@@ -191,7 +185,6 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto p-4 space-y-6 animate-fade-in">
-        {/* Summary Cards */}
         <div className="grid md:grid-cols-3 gap-4">
           <Card variant="glass" className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-xl hover:scale-[1.02] duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -251,7 +244,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Add Transaction Button */}
         <div className="flex justify-end">
           <Button onClick={() => setShowForm(!showForm)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -259,7 +251,6 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Transaction Form */}
         {showForm && (
           <TransactionForm
             onSuccess={() => {
@@ -275,7 +266,6 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Tabs Navigation */}
         <Tabs defaultValue="transactions" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto">
             <TabsTrigger value="transactions" className="flex items-center gap-2 py-3">
@@ -304,7 +294,6 @@ const Dashboard = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Transaction History Tab */}
           <TabsContent value="transactions" className="space-y-6">
             <TransactionHistory 
               transactions={transactions} 
@@ -316,27 +305,22 @@ const Dashboard = () => {
             />
           </TabsContent>
 
-          {/* Reports and Charts Tab */}
           <TabsContent value="reports" className="space-y-6">
             <FinancialCharts transactions={transactions} creditCards={creditCards} />
           </TabsContent>
 
-          {/* Credit Cards Tab */}
           <TabsContent value="cards" className="space-y-6">
             <CreditCards />
           </TabsContent>
 
-          {/* Financial Goals Tab */}
           <TabsContent value="goals" className="space-y-6">
             <FinancialGoals transactions={transactions} creditCards={creditCards} />
           </TabsContent>
 
-          {/* AI Analysis Tab */}
           <TabsContent value="ai" className="space-y-6">
             <AIChat />
           </TabsContent>
 
-          {/* Monthly Report Tab */}
           <TabsContent value="email" className="space-y-6">
             <MonthlyReport transactions={transactions} creditCards={creditCards} />
           </TabsContent>

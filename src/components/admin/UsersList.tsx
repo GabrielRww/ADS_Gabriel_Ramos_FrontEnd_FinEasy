@@ -16,21 +16,21 @@ export const UsersList = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      // Buscar todos os perfis com email
+      
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*");
 
       if (profilesError) throw profilesError;
 
-      // Buscar todos os roles
+      
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*");
 
       if (rolesError) throw rolesError;
 
-      // Combinar os dados
+      
       return profiles.map(profile => ({
         ...profile,
         email: profile.email || 'Email não disponível',

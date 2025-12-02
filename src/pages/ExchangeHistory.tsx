@@ -25,31 +25,31 @@ const ExchangeHistory = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>(30);
   const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "EUR">("USD");
   
-  // Enable exchange alerts checking
+  
   useExchangeAlerts();
 
   useEffect(() => {
     const fetchHistoricalRates = async () => {
       try {
-        // Fetch current rates for both USD and EUR to BRL
-        const usdResponse = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+        
+        const usdResponse = await fetch("https:
         const usdData = await usdResponse.json();
         const usdToBrl = usdData.rates.BRL;
         
-        const eurResponse = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+        const eurResponse = await fetch("https:
         const eurData = await eurResponse.json();
         const eurToBrl = eurData.rates.BRL;
         
         setCurrentRates({ USD: usdToBrl, EUR: eurToBrl });
 
-        // Generate simulated historical data based on current rate
+        
         const today = new Date();
         const historicalData: ExchangeRate[] = [];
         
         for (let i = selectedPeriod - 1; i >= 0; i--) {
           const date = subDays(today, i);
           
-          // Last point should be exactly the current rate
+          
           if (i === 0) {
             historicalData.push({
               date: format(date, "dd/MM", { locale: ptBR }),
@@ -57,9 +57,9 @@ const ExchangeHistory = () => {
               EUR: parseFloat(eurToBrl.toFixed(2)),
             });
           } else {
-            // Generate realistic variation for historical points
-            const volatility = (Math.random() - 0.5) * 0.04; // -2% to +2%
-            const trendFactor = (i / selectedPeriod) * 0.03; // Slight trend over time
+            
+            const volatility = (Math.random() - 0.5) * 0.04; 
+            const trendFactor = (i / selectedPeriod) * 0.03; 
             
             const usdRate = usdToBrl * (1 + volatility - trendFactor);
             const eurRate = eurToBrl * (1 + volatility * 1.1 - trendFactor * 0.9);
@@ -138,7 +138,7 @@ const ExchangeHistory = () => {
             <Card className="backdrop-blur-lg bg-card/50 border-border/50 mb-6">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-4">
-                  {/* Currency Selector */}
+                  {}
                   <div className="flex gap-2">
                     <Button
                       variant={selectedCurrency === "USD" ? "default" : "outline"}
@@ -156,7 +156,7 @@ const ExchangeHistory = () => {
                     </Button>
                   </div>
 
-                  {/* Current Rate Display */}
+                  {}
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
@@ -178,7 +178,7 @@ const ExchangeHistory = () => {
                     </div>
                   </div>
 
-                  {/* Period Filter */}
+                  {}
                   <div className="flex gap-2 pt-2">
                     {periods.map((period) => (
                       <Button

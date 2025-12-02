@@ -102,7 +102,7 @@ const AIChat = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        {/* Messages Area */}
+        {}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && (
             <div className="text-center py-12 animate-fade-in">
@@ -195,7 +195,7 @@ const AIChat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
+        {}
         <div className="border-t bg-gradient-to-b from-transparent to-background/50 backdrop-blur-sm p-4">
           <div className="flex gap-2 max-w-4xl mx-auto">
             <Input

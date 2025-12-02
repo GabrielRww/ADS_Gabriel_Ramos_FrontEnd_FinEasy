@@ -48,22 +48,22 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
-  // Calcular dados mensais
+  
   const monthlyData = useMemo(() => {
     const monthsData: { [key: string]: { receitas: number; despesas: number; saldo: number; date: Date } } = {};
 
-    // Filtrar transações por período
+    
     const filteredTransactions = transactions.filter(t => {
       if (selectedCategory !== "all" && t.categories?.name !== selectedCategory) return false;
       
       const transactionDate = new Date(t.date);
       
-      // Se houver filtro personalizado, usar essas datas
+      
       if (startDate && endDate) {
         return transactionDate >= startDate && transactionDate <= endDate;
       }
       
-      // Caso contrário, usar o período selecionado
+      
       if (selectedPeriod !== "custom") {
         const months = parseInt(selectedPeriod);
         const now = new Date();
@@ -74,7 +74,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       return true;
     });
 
-    // Agregar dados das transações (cria meses dinamicamente)
+    
     filteredTransactions.forEach(t => {
       const date = new Date(t.date);
       const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
@@ -91,12 +91,12 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       }
     });
 
-    // Adicionar gastos dos cartões de crédito considerando o mês de criação
+    
     creditCards.forEach(card => {
       const cardDate = new Date(card.created_at);
       const key = cardDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
-      // Verificar se o cartão está dentro do período filtrado
+      
       let includeCard = false;
       if (startDate && endDate) {
         includeCard = cardDate >= startDate && cardDate <= endDate;
@@ -117,12 +117,12 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       }
     });
 
-    // Recalcular saldo
+    
     Object.keys(monthsData).forEach(key => {
       monthsData[key].saldo = monthsData[key].receitas - monthsData[key].despesas;
     });
 
-    // Ordenar por data e retornar
+    
     return Object.entries(monthsData)
       .sort(([, a], [, b]) => a.date.getTime() - b.date.getTime())
       .map(([mes, data]) => ({
@@ -133,7 +133,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       }));
   }, [transactions, selectedPeriod, selectedCategory, creditCards, startDate, endDate]);
 
-  // Dados por categoria
+  
   const categoryData = useMemo(() => {
     const categories: { [key: string]: number } = {};
     
@@ -145,7 +145,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       categories[categoryName] = (categories[categoryName] || 0) + amount;
     });
 
-    // Adicionar gastos dos cartões como categoria separada
+    
     const totalCardExpenses = creditCards.reduce((sum, card) => sum + Number(card.used_limit), 0);
     if (totalCardExpenses > 0) {
       categories['Cartões de Crédito'] = totalCardExpenses;
@@ -157,7 +157,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
       .slice(0, 8);
   }, [transactions, creditCards]);
 
-  // Análise de tendências
+  
   const trend = useMemo(() => {
     if (monthlyData.length < 2) return { direction: 'stable', percentage: 0, message: 'Dados insuficientes' };
 
@@ -192,7 +192,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
     }
   }, [monthlyData]);
 
-  // Obter categorias únicas
+  
   const categories = useMemo(() => {
     const uniqueCategories = new Set(transactions.map(t => t.categories?.name).filter(Boolean));
     return Array.from(uniqueCategories);
@@ -200,7 +200,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
 
   return (
     <div className="space-y-6">
-      {/* Filtros */}
+      {}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -308,7 +308,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
         </CardContent>
       </Card>
 
-      {/* Análise de Tendências */}
+      {}
       <Card className={`border-2 transition-all ${
         trend.direction === 'up' ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20' :
         trend.direction === 'down' ? 'border-red-500/50 bg-red-50/50 dark:bg-red-950/20' :
@@ -335,7 +335,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
         </CardContent>
       </Card>
 
-      {/* Gráfico de Evolução Mensal */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle>Evolução Mensal - Receitas vs Despesas</CardTitle>
@@ -358,7 +358,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
         </CardContent>
       </Card>
 
-      {/* Gráfico de Saldo */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle>Evolução do Saldo</CardTitle>
@@ -387,7 +387,7 @@ const FinancialCharts = ({ transactions, creditCards }: FinancialChartsProps) =>
         </CardContent>
       </Card>
 
-      {/* Gráfico de Pizza - Despesas por Categoria */}
+      {}
       {categoryData.length > 0 && (
         <Card>
           <CardHeader>

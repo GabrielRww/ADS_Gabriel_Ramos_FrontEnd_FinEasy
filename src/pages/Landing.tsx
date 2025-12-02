@@ -6,12 +6,10 @@ import fineasyLogo from "@/assets/fineasy-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 const Landing = () => {
   return <div className="min-h-screen bg-background transition-colors duration-300">
-      {/* Header with Theme Toggle */}
       <header className="fixed top-0 right-0 z-50 p-4">
         <ThemeToggle />
       </header>
 
-      {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
           <div className="flex justify-center mb-8">
@@ -34,7 +32,6 @@ const Landing = () => {
           </Link>
         </div>
 
-        {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <Card variant="glass" className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 animate-fade-in">
             <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4 animate-scale-in">
@@ -89,7 +86,6 @@ const Landing = () => {
           </Card>
         </div>
 
-        {/* Additional Features */}
         <div className="relative overflow-hidden rounded-2xl p-10 border-2 border-primary/20 animate-fade-in bg-gradient-to-br from-primary/5 via-background to-primary/10">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
           <div className="relative z-10">
@@ -155,7 +151,6 @@ const Landing = () => {
         </div>
       </div>
 
-      {/* Footer CTA */}
       <div className="bg-primary/5 py-16 animate-fade-in">
         <div className="container mx-auto px-4">
           <Card variant="glass-strong" className="p-12 text-center bg-gradient-to-br from-primary/10 to-accent/10 border-none max-w-3xl mx-auto">

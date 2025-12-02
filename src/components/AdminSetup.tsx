@@ -8,9 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Shield, CheckCircle, XCircle } from "lucide-react";
 
-// COMPONENTE TEMPORÁRIO PARA SETUP INICIAL DO ADMIN
-// REMOVA APÓS CRIAR O PRIMEIRO ADMINISTRADOR
-
 const AdminSetup = () => {
   const [email, setEmail] = useState("gabrieelramoswendl4nd@gmail.com");
   const [password, setPassword] = useState("123456");
@@ -49,7 +46,7 @@ const AdminSetup = () => {
         toast.success("Conta criada com sucesso!");
         setAccountCreated(true);
         
-        // Tentar promover imediatamente
+        
         setTimeout(() => {
           promoteToAdmin();
         }, 1000);
@@ -69,10 +66,10 @@ const AdminSetup = () => {
     try {
       console.log("Tentando fazer login...");
       
-      // Aguardar um pouco antes do login para garantir que a conta foi criada
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Fazer login para obter o user ID
+      
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password
@@ -81,7 +78,7 @@ const AdminSetup = () => {
       console.log("Resultado login:", { loginData, loginError });
 
       if (loginError) {
-        // Se der erro de login, tentar obter o usuário atual da sessão
+        
         console.log("Erro no login, tentando obter sessão atual...");
         const { data: sessionData } = await supabase.auth.getSession();
         
@@ -92,7 +89,7 @@ const AdminSetup = () => {
           return;
         }
         
-        // Se não conseguir fazer login, vamos tentar criar o role através do email
+        
         console.log("Tentando criar role através do email...");
         await createAdminRoleByEmail();
         return;
@@ -117,7 +114,7 @@ const AdminSetup = () => {
   const createAdminRole = async (userId: string) => {
     console.log("User ID obtido:", userId);
 
-    // Verificar se já tem role
+    
     console.log("Verificando role existente...");
     const { data: existingRole, error: roleError } = await supabase
       .from('user_roles')
@@ -155,7 +152,7 @@ const AdminSetup = () => {
 
   const createAdminRoleByEmail = async () => {
     try {
-      // Usar uma função SQL personalizada para criar o role
+      
       const { data, error } = await supabase.rpc('create_admin_by_email', {
         admin_email: email
       });

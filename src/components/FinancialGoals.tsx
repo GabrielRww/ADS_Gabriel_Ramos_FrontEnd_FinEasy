@@ -102,15 +102,15 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
   const transactions = propTransactions.length > 0 ? propTransactions : (fetchedTransactions || []);
   const creditCards = propCreditCards.length > 0 ? propCreditCards : (fetchedCreditCards || []);
 
-  // Calcula automaticamente o progresso das metas baseado nas transações
+  
   const calculateGoalProgress = (goal: FinancialGoal) => {
     if (!transactions || transactions.length === 0) return goal.current_amount;
 
-    // Filtra transações desde a criação da meta
+    
     const goalDate = new Date(goal.created_at);
     const relevantTransactions = transactions.filter(t => new Date(t.date) >= goalDate);
 
-    // Calcula total de receitas e despesas desde a criação da meta
+    
     const totalReceitas = relevantTransactions
       .filter(t => t.type === "receita")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
@@ -119,21 +119,21 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
       .filter(t => t.type === "despesa")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-    // Adicionar gastos dos cartões de crédito criados após a meta
+    
     const despesasCartoes = creditCards
       .filter(card => new Date(card.created_at) >= goalDate)
       .reduce((sum, card) => sum + Number(card.used_limit), 0);
     
     const totalDespesas = despesasTransacoes + despesasCartoes;
 
-    // O valor atual é: valor inicial + (receitas - despesas) acumuladas
+    
     const economia = totalReceitas - totalDespesas;
-    const currentAmount = Number(goal.current_amount || 0) + (economia > 0 ? economia * 0.3 : 0); // 30% da economia vai para as metas
+    const currentAmount = Number(goal.current_amount || 0) + (economia > 0 ? economia * 0.3 : 0); 
     
     return Math.max(0, currentAmount);
   };
 
-  // Calcula a economia mensal real baseada no histórico
+  
   const calculateRealMonthlySavings = (goal: FinancialGoal) => {
     if (!transactions || transactions.length === 0) return goal.monthly_contribution || 0;
 
@@ -150,7 +150,7 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
       .filter(t => t.type === "despesa")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-    // Adicionar gastos dos cartões de crédito criados após a meta
+    
     const despesasCartoes = creditCards
       .filter(card => new Date(card.created_at) >= goalDate)
       .reduce((sum, card) => sum + Number(card.used_limit), 0);
@@ -159,7 +159,7 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
     const totalSavings = totalReceitas - totalDespesas;
     const monthlySavings = totalSavings / monthsSinceCreation;
 
-    // 30% da economia mensal real vai para as metas
+    
     return monthlySavings > 0 ? monthlySavings * 0.3 : goal.monthly_contribution || 0;
   };
 
@@ -231,27 +231,27 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
     return format(estimatedDate, "MMMM 'de' yyyy", { locale: ptBR });
   };
 
-  // Calcula o histórico de evolução da meta mês a mês
+  
   const calculateGoalHistory = (goal: FinancialGoal) => {
     if (!transactions || transactions.length === 0) return [];
 
     const goalDate = new Date(goal.created_at);
     const today = new Date();
     
-    // Gera array de meses desde a criação até hoje
+    
     const months = eachMonthOfInterval({ start: goalDate, end: today });
     
     return months.map((month) => {
       const monthStart = startOfMonth(month);
       const monthEnd = endOfMonth(month);
       
-      // Filtra transações até este mês
+      
       const transactionsUntilMonth = transactions.filter(t => {
         const tDate = new Date(t.date);
         return tDate >= goalDate && tDate <= monthEnd;
       });
 
-      // Calcula receitas e despesas acumuladas até este mês
+      
       const totalReceitas = transactionsUntilMonth
         .filter(t => t.type === "receita")
         .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
@@ -260,7 +260,7 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
         .filter(t => t.type === "despesa")
         .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-      // Adicionar gastos dos cartões criados até este mês
+      
       const despesasCartoes = creditCards
         .filter(card => {
           const cardDate = new Date(card.created_at);
@@ -438,7 +438,7 @@ export const FinancialGoals = ({ transactions: propTransactions = [], creditCard
                   <span>Economia mensal: R$ {monthlySavings.toFixed(2)}</span>
                 </div>
 
-                {/* Gráfico de Evolução */}
+                {}
                 {calculateGoalHistory(goal).length > 1 && (
                   <div className="border-t pt-4">
                     <div className="flex items-center gap-2 mb-3">

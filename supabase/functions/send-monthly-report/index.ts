@@ -1,14 +1,14 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
-import * as XLSX from "https://esm.sh/xlsx@0.18.5";
+import { serve } from "https:
+import { createClient } from "https:
+import { PDFDocument, rgb, StandardFonts } from "https:
+import * as XLSX from "https:
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper function to generate PDF
+
 async function generatePDF(
   monthName: string,
   receitas: number,
@@ -18,14 +18,14 @@ async function generatePDF(
   transactions: any[]
 ): Promise<string> {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4 size
+  const page = pdfDoc.addPage([595, 842]); 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   
   let yPosition = 800;
   const leftMargin = 50;
   
-  // Title
+  
   page.drawText('Relatório Financeiro', {
     x: leftMargin,
     y: yPosition,
@@ -44,7 +44,7 @@ async function generatePDF(
   
   yPosition -= 50;
   
-  // Summary
+  
   page.drawText('Resumo do Mês', {
     x: leftMargin,
     y: yPosition,
@@ -81,7 +81,7 @@ async function generatePDF(
   
   yPosition -= 40;
   
-  // Category breakdown
+  
   page.drawText('Gastos por Categoria', {
     x: leftMargin,
     y: yPosition,
@@ -117,7 +117,7 @@ async function generatePDF(
   return base64;
 }
 
-// Helper function to generate Excel
+
 function generateExcel(
   monthName: string,
   receitas: number,
@@ -126,10 +126,10 @@ function generateExcel(
   categoryStats: Record<string, number>,
   transactions: any[]
 ): string {
-  // Create workbook
+  
   const wb = XLSX.utils.book_new();
 
-  // Summary sheet
+  
   const summaryData = [
     ['Relatório Financeiro', monthName],
     [],
@@ -149,7 +149,7 @@ function generateExcel(
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo');
 
-  // Transactions sheet
+  
   const transactionsData = [
     ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'],
     ...transactions.map(t => [
@@ -164,7 +164,7 @@ function generateExcel(
   const wsTransactions = XLSX.utils.aoa_to_sheet(transactionsData);
   XLSX.utils.book_append_sheet(wb, wsTransactions, 'Transações');
 
-  // Generate Excel file as base64
+  
   const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   return btoa(String.fromCharCode(...new Uint8Array(excelBuffer)));
 }
@@ -207,7 +207,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
+    
     const token = authHeader.replace("Bearer ", "");
     console.log("Authenticating user...");
     
@@ -223,7 +223,7 @@ serve(async (req) => {
 
     console.log(`User authenticated: ${user.email}`);
 
-    // Get user profile
+    
     console.log("Fetching user profile...");
     const { data: profile } = await supabase
       .from("profiles")
@@ -231,7 +231,7 @@ serve(async (req) => {
       .eq("id", user.id)
       .single();
 
-    // Get current month transactions
+    
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
@@ -264,7 +264,7 @@ serve(async (req) => {
       );
     }
 
-    // Calculate totals
+    
     const receitas = transactions
       .filter((t) => t.type === "receita")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
@@ -275,7 +275,7 @@ serve(async (req) => {
 
     const saldo = receitas - despesas;
 
-    // Group by category
+    
     const categoryStats: Record<string, number> = {};
     transactions
       .filter((t) => t.type === "despesa" && t.categories)
@@ -284,7 +284,7 @@ serve(async (req) => {
         categoryStats[categoryName] = (categoryStats[categoryName] || 0) + Number(t.amount_brl || t.amount);
       });
 
-    // Create HTML email
+    
     const monthName = now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
     const categoriesHtml = Object.entries(categoryStats)
       .sort((a, b) => b[1] - a[1])
@@ -373,7 +373,7 @@ serve(async (req) => {
       </html>
     `;
 
-    // Generate attachment based on format
+    
     let attachment = null;
     
     if (format === "pdf") {
@@ -392,10 +392,10 @@ serve(async (req) => {
       };
     }
 
-    // Send email using Brevo API
+    
     console.log(`Sending email to ${user.email}...`);
     
-    // Use a verified sender email - users should add their own verified email in Brevo
+    
     const emailBody: any = {
       sender: { name: "Fineasy Relatórios", email: "noreply@brevo.com" },
       to: [{ email: user.email!, name: profile?.full_name || user.email }],
@@ -410,7 +410,7 @@ serve(async (req) => {
       }];
     }
     
-    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const emailResponse = await fetch("https:
       method: "POST",
       headers: {
         "api-key": brevoApiKey,

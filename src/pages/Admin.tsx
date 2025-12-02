@@ -18,7 +18,7 @@ const Admin = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Check authentication
+    
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -32,7 +32,7 @@ const Admin = () => {
       }
       setUser(user);
 
-      // Log access
+      
       await supabase.from("user_access_logs").insert({
         user_id: user.id,
         action: "admin_page_access",
@@ -45,7 +45,7 @@ const Admin = () => {
   }, [navigate, toast]);
 
   useEffect(() => {
-    // Check if user is admin
+    
     if (!isLoading && userRole !== 'admin') {
       toast({
         title: "Acesso negado",

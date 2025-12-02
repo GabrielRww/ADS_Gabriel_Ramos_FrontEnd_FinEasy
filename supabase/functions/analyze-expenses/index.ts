@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https:
+import { createClient } from "https:
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +39,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
+    
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
@@ -50,7 +50,7 @@ serve(async (req) => {
       });
     }
 
-    // Get user's transactions
+    
     const { data: transactions, error: transactionsError } = await supabase
       .from("transactions")
       .select("*, categories(*)")
@@ -59,7 +59,7 @@ serve(async (req) => {
 
     if (transactionsError) throw transactionsError;
 
-    // Get user's credit cards
+    
     const { data: creditCards, error: cardsError } = await supabase
       .from("credit_cards")
       .select("*")
@@ -79,7 +79,7 @@ serve(async (req) => {
       );
     }
 
-    // Calculate statistics
+    
     const receitas = transactions
       .filter((t) => t.type === "receita")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
@@ -88,11 +88,11 @@ serve(async (req) => {
       .filter((t) => t.type === "despesa")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0);
 
-    // Incluir gastos dos cartões de crédito
+    
     const despesasCartoes = creditCards?.reduce((sum, card) => sum + Number(card.used_limit), 0) || 0;
     const despesas = despesasTransacoes + despesasCartoes;
 
-    // Group by category
+    
     const categoryStats: Record<string, number> = {};
     transactions
       .filter((t) => t.type === "despesa" && t.categories)
@@ -101,12 +101,12 @@ serve(async (req) => {
         categoryStats[categoryName] = (categoryStats[categoryName] || 0) + Number(t.amount_brl || t.amount);
       });
 
-    // Adicionar cartões como categoria separada se houver gastos
+    
     if (despesasCartoes > 0) {
       categoryStats["Cartões de Crédito"] = despesasCartoes;
     }
 
-    // Prepare data for AI
+    
     const dataForAI = {
       totalReceitas: receitas,
       totalDespesas: despesas,
@@ -118,7 +118,7 @@ serve(async (req) => {
       numeroDeCartoes: creditCards?.length || 0,
     };
 
-    // Call Lovable AI Gateway for analysis
+    
     const prompt = `Você é um assistente financeiro inteligente. Analise os dados financeiros do usuário e forneça insights úteis e acionáveis sobre seus hábitos de gastos. Seja direto e objetivo, destacando os pontos mais importantes.
 
 Forneça uma análise detalhada destacando:
@@ -144,7 +144,7 @@ ${Object.entries(dataForAI.gastoPorCategoria)
 
     console.log("Sending request to Lovable AI Gateway...");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https:
       method: "POST",
       headers: {
         "Authorization": `Bearer ${lovableApiKey}`,

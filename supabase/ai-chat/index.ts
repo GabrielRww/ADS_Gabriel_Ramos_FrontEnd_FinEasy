@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https:
+import { createClient } from "https:
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,7 +37,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
+    
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
@@ -48,7 +48,7 @@ serve(async (req) => {
       });
     }
 
-    // Get user's transactions
+    
     const { data: transactions, error: transactionsError } = await supabase
       .from("transactions")
       .select("*, categories(*)")
@@ -57,7 +57,7 @@ serve(async (req) => {
 
     if (transactionsError) throw transactionsError;
 
-    // Get user's credit cards
+    
     const { data: creditCards, error: cardsError } = await supabase
       .from("credit_cards")
       .select("*")
@@ -66,7 +66,7 @@ serve(async (req) => {
 
     if (cardsError) throw cardsError;
 
-    // Get user's financial goals
+    
     const { data: financialGoals, error: goalsError } = await supabase
       .from("financial_goals")
       .select("*")
@@ -75,7 +75,7 @@ serve(async (req) => {
 
     if (goalsError) throw goalsError;
 
-    // Get user's categories
+    
     const { data: categories, error: categoriesError } = await supabase
       .from("categories")
       .select("*")
@@ -84,10 +84,10 @@ serve(async (req) => {
 
     if (categoriesError) throw categoriesError;
 
-    // Get messages from request
+    
     const { messages } = await req.json();
 
-    // Calculate financial statistics
+    
     const receitas = transactions
       ?.filter((t) => t.type === "receita")
       .reduce((sum, t) => sum + Number(t.amount_brl || t.amount), 0) || 0;
@@ -104,7 +104,7 @@ serve(async (req) => {
         categoryStats[categoryName] = (categoryStats[categoryName] || 0) + Number(t.amount_brl || t.amount);
       });
 
-    // Credit cards statistics
+    
     const totalCreditLimit = creditCards?.reduce((sum, card) => sum + Number(card.credit_limit), 0) || 0;
     const totalUsedLimit = creditCards?.reduce((sum, card) => sum + Number(card.used_limit), 0) || 0;
     const totalAvailableLimit = totalCreditLimit - totalUsedLimit;
@@ -123,7 +123,7 @@ ${creditCards.map((card) => {
 - Uso geral dos cartões: ${creditUsagePercentage.toFixed(1)}%
 ` : "Nenhum cartão de crédito cadastrado.";
 
-    // Financial goals statistics
+    
     const goalsContext = financialGoals?.length ? `
 Metas Financeiras (${financialGoals.length} metas):
 ${financialGoals.map((goal) => {
@@ -134,7 +134,7 @@ ${financialGoals.map((goal) => {
 }).join("\n")}
 ` : "Nenhuma meta financeira cadastrada.";
 
-    // Categories context
+    
     const categoriesContext = categories?.length ? `
 Categorias (${categories.length} categorias):
 ${categories.map((cat) => `- ${cat.icon} ${cat.name}`).join(", ")}
@@ -187,7 +187,7 @@ Diretrizes:
 
     console.log("Sending request to Lovable AI Gateway...");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https:
       method: "POST",
       headers: {
         "Authorization": `Bearer ${lovableApiKey}`,

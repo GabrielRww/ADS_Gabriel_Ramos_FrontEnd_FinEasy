@@ -64,16 +64,16 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Header com cor de fundo
-      pdf.setFillColor(59, 130, 246); // Blue
+      
+      pdf.setFillColor(59, 130, 246); 
       pdf.rect(0, 0, pageWidth, 40, "F");
       
-      // Logo
+      
       const img = new Image();
       img.src = logoImage;
       pdf.addImage(img, "PNG", 15, 10, 25, 25);
       
-      // Título
+      
       pdf.setFontSize(22);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(255, 255, 255);
@@ -83,12 +83,12 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       pdf.setFont("helvetica", "normal");
       pdf.text(monthName.charAt(0).toUpperCase() + monthName.slice(1), 50, 30);
       
-      // Data de geração
+      
       pdf.setFontSize(9);
       const generatedDate = new Date().toLocaleDateString("pt-BR");
       pdf.text(`Gerado em: ${generatedDate}`, pageWidth - 50, 25);
       
-      // Box do Resumo
+      
       let yPos = 55;
       pdf.setDrawColor(59, 130, 246);
       pdf.setLineWidth(0.5);
@@ -99,7 +99,7 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       pdf.setTextColor(31, 41, 55);
       pdf.text("Resumo do Mês", 20, yPos + 10);
       
-      // Receitas
+      
       pdf.setFontSize(12);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(16, 185, 129);
@@ -107,14 +107,14 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       pdf.setFont("helvetica", "bold");
       pdf.text(`R$ ${receitas.toFixed(2)}`, 55, yPos + 22);
       
-      // Despesas
+      
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(239, 68, 68);
       pdf.text("Despesas:", 20, yPos + 32);
       pdf.setFont("helvetica", "bold");
       pdf.text(`R$ ${despesas.toFixed(2)}`, 55, yPos + 32);
       
-      // Saldo com destaque
+      
       pdf.setDrawColor(saldo >= 0 ? 16 : 239, saldo >= 0 ? 185 : 68, saldo >= 0 ? 129 : 68);
       pdf.setLineWidth(1);
       pdf.line(20, yPos + 37, pageWidth - 20, yPos + 37);
@@ -125,7 +125,7 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       pdf.text("Saldo:", 20, yPos + 45);
       pdf.text(`R$ ${saldo.toFixed(2)}`, 55, yPos + 45);
       
-      // Box de Gastos por Categoria
+      
       yPos = 115;
       
       const sortedCategories = Object.entries(categoryStats).sort((a, b) => b[1] - a[1]);
@@ -149,7 +149,7 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
       sortedCategories.forEach(([category, amount], index) => {
         const percentage = ((amount / despesas) * 100).toFixed(1);
         
-        // Alternar cores de fundo para melhor legibilidade
+        
         if (index % 2 === 0) {
           pdf.setFillColor(249, 250, 251);
           pdf.rect(17, yPos - 4, pageWidth - 34, 7, "F");
@@ -169,7 +169,7 @@ const MonthlyReport = ({ transactions = [], creditCards = [] }: MonthlyReportPro
         yPos += 8;
       });
       
-      // Rodapé
+      
       pdf.setDrawColor(229, 231, 235);
       pdf.setLineWidth(0.5);
       pdf.line(15, pageHeight - 20, pageWidth - 15, pageHeight - 20);

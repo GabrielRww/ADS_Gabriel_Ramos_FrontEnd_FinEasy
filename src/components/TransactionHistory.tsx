@@ -47,7 +47,7 @@ const TransactionHistory = ({ transactions, onUpdate, onEdit }: TransactionHisto
     }
   };
 
-  // Get unique months from transactions
+  
   const months = Array.from(
     new Set(
       transactions.map((t) => {
@@ -57,7 +57,7 @@ const TransactionHistory = ({ transactions, onUpdate, onEdit }: TransactionHisto
     )
   ).sort((a, b) => b.localeCompare(a));
 
-  // Filter transactions
+  
   const filteredTransactions = transactions.filter((t) => {
     if (filterType !== "all" && t.type !== filterType) return false;
     if (filterMonth !== "all") {

@@ -212,22 +212,22 @@ export const CreditCards = () => {
   const calculateCardScore = (usedLimit: number, creditLimit: number): number => {
     const usagePercentage = (usedLimit / creditLimit) * 100;
     
-    // Base score calculation based on usage
+    
     let score = 100;
     
     if (usagePercentage > 90) {
-      score = 20 + (100 - usagePercentage) * 0.5; // 20-25
+      score = 20 + (100 - usagePercentage) * 0.5; 
     } else if (usagePercentage > 70) {
-      score = 30 + (90 - usagePercentage) * 1.5; // 30-60
+      score = 30 + (90 - usagePercentage) * 1.5; 
     } else if (usagePercentage > 50) {
-      score = 50 + (70 - usagePercentage) * 1.5; // 50-80
+      score = 50 + (70 - usagePercentage) * 1.5; 
     } else if (usagePercentage > 30) {
-      score = 70 + (50 - usagePercentage) * 1; // 70-90
+      score = 70 + (50 - usagePercentage) * 1; 
     } else {
-      score = 85 + (30 - usagePercentage) * 0.5; // 85-100
+      score = 85 + (30 - usagePercentage) * 0.5; 
     }
     
-    // Bonus for having available credit (up to 10 points)
+    
     const availableLimit = creditLimit - usedLimit;
     const bonusPoints = Math.min(10, (availableLimit / creditLimit) * 10);
     
@@ -324,7 +324,7 @@ export const CreditCards = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              {/* Preview do Cartão */}
+              {}
               {formData.card_name && (
                 <div className={`relative h-40 bg-gradient-to-br ${bankOptions.find(b => b.name === formData.card_name)?.color || 'from-gray-600 to-gray-800'} p-6 text-white rounded-lg animate-scale-in`}>
                   <div className="flex justify-between items-start">
@@ -473,7 +473,7 @@ export const CreditCards = () => {
 
           return (
             <Card key={card.id} className="overflow-hidden">
-              {/* Visual Credit Card */}
+              {}
               <div className={`relative h-48 bg-gradient-to-br ${cardColors.bg} p-6 text-white rounded-t-lg`}>
                 <div className="flex justify-between items-start mb-8">
                   <div>

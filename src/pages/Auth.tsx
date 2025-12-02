@@ -24,7 +24,6 @@ const Auth = () => {
   const isRecoveryRef = useRef(false);
  
   useEffect(() => {
-    // Detectar modo de recuperação pela URL (quando vindo do link do e-mail)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const urlParams = new URLSearchParams(window.location.search);
     const type = hashParams.get("type");
@@ -35,11 +34,9 @@ const Auth = () => {
       setIsUpdatingPassword(true);
     }
 
-    // Ouvir mudanças de autenticação primeiro (inclui PASSWORD_RECOVERY)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth event:", event, "Session:", session);
       
-      // Evento disparado pelo link de recuperação do Supabase
       if (event === "PASSWORD_RECOVERY") {
         isRecoveryRef.current = true;
         setIsUpdatingPassword(true);
@@ -48,12 +45,10 @@ const Auth = () => {
       }
       
       if (session && event === "SIGNED_IN") {
-        // Se estamos em modo de recuperação, não redirecionar automaticamente
         if (isRecoveryRef.current || isUpdatingPassword) {
           return;
         }
 
-        // Deferir a checagem de papel para não bloquear o evento de auth
         setTimeout(async () => {
           const { data: roleData } = await supabase
             .from('user_roles')
@@ -70,7 +65,6 @@ const Auth = () => {
       }
     });
  
-    // Verificar sessão existente (mas evitar redirecionar em modo recuperação)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session && !isUpdatingPassword && !isRecoveryRef.current) {
         const { data: roleData } = await supabase
@@ -187,7 +181,7 @@ const Auth = () => {
     setLoading(true);
  
     try {
-      // Verificar se temos sessão válida primeiro
+      
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
@@ -213,9 +207,9 @@ const Auth = () => {
         setIsUpdatingPassword(false);
         setNewPassword("");
         setConfirmPassword("");
-        // Deslogar após reset para forçar login com a nova senha
+        
         await supabase.auth.signOut();
-        // Limpar URL e voltar para login
+        
         window.history.replaceState({}, document.title, '/auth');
       }
     } catch (error) {

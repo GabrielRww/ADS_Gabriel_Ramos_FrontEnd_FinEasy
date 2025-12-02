@@ -36,21 +36,21 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
   });
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
 
-  // Fetch exchange rates
+  
   const { data: exchangeRates } = useQuery({
     queryKey: ["exchangeRates"],
     queryFn: async () => {
-      const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+      const response = await fetch("https:
       const data = await response.json();
       return {
         USD_BRL: data.rates.BRL,
         EUR_BRL: data.rates.BRL / data.rates.EUR,
       };
     },
-    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+    staleTime: 1000 * 60 * 30, 
   });
 
-  // Calculate converted amount in real-time
+  
   useEffect(() => {
     if (formData.amount && formData.currency !== "BRL" && exchangeRates) {
       const amount = Number(formData.amount);
@@ -88,14 +88,14 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
 
       let amountBrl = Number(formData.amount);
 
-      // Convert currency if not BRL
+      
       if (formData.currency !== "BRL" && exchangeRates) {
         const rate = formData.currency === "USD" ? exchangeRates.USD_BRL : exchangeRates.EUR_BRL;
         amountBrl = Number(formData.amount) * rate;
       }
 
       if (editingTransaction) {
-        // Update existing transaction
+        
         const { error } = await supabase
           .from("transactions")
           .update({
@@ -112,7 +112,7 @@ const TransactionForm = ({ onSuccess, onCancel, editingTransaction }: Transactio
         if (error) throw error;
         toast.success("Transação atualizada com sucesso!");
       } else {
-        // Insert new transaction
+        
         const { error } = await supabase.from("transactions").insert({
           user_id: user.id,
           type: formData.type,
